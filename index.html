@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GTM Automation Architecture // Vladan Mitic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:    #0A0E13;
+      --black2:   #0D1117;
+      --card:     #0D1710;
+      --card2:    #111A12;
+      --border:   #1A2820;
+      --border2:  #1F3028;
+      --green:    #007A2E;
+      --green2:   #005C22;
+      --green-dim:#007A2E22;
+      --white:    #F0F6FC;
+      --gray:     #7D8590;
+      --gray2:    #4A5568;
+      --mono:     'JetBrains Mono', monospace;
+      --display:  'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.7;
+      overflow-x: clip;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    #cursor {
+      width: 12px; height: 12px;
+      background: var(--green);
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+    #cursor-ring {
+      width: 36px; height: 36px;
+      border: 1px solid var(--green);
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9998;
+      border-radius: 50%;
+      opacity: 0.4;
+      transition: transform 0.15s ease, width 0.2s, height 0.2s, opacity 0.2s;
+    }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring { width: 60px; height: 60px; opacity: 0.2; }
+
+    /* Boot screen */
+    #boot {
+      position: fixed; inset: 0;
+      background: var(--black);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      transition: opacity 0.6s ease;
+    }
+    #boot.hidden { opacity: 0; pointer-events: none; }
+    .boot-line {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--gray);
+      opacity: 0;
+      animation: bootFade 0.3s ease forwards;
+    }
+    .boot-line span { color: var(--green); }
+    @keyframes bootFade { to { opacity: 1; } }
+
+    /* Progress bar */
+    #progress {
+      position: fixed; top: 0; left: 0; height: 2px;
+      background: var(--green);
+      z-index: 500;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 400;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+      height: 56px;
+      background: rgba(10,14,19,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--white);
+      letter-spacing: 0.05em;
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a {
+      font-size: 11px;
+      color: var(--gray);
+      text-decoration: none;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--green); }
+
+    /* Sections */
+    section {
+      min-height: 100vh;
+      padding: 120px 80px 80px;
+      position: relative;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Reveal animation */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* Section label */
+    .section-label {
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::before {
+      content: '//';
+      color: var(--gray2);
+    }
+
+    /* Headings */
+    h1, h2, h3 { font-family: var(--mono); }
+    h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
+    h2 { font-size: clamp(26px, 3.5vw, 44px); font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }
+    h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+
+    /* Hero */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding-top: 80px;
+      overflow: hidden;
+    }
+    .hero-inner { position: relative; z-index: 2; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border2);
+      padding: 6px 14px;
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+    .hero-tag .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    .hero-title { margin-bottom: 24px; }
+    .hero-title .line1 { color: var(--white); display: block; }
+    .hero-title .line2 { color: var(--green); display: block; }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--gray);
+      max-width: 580px;
+      margin-bottom: 48px;
+      line-height: 1.8;
+    }
+
+    .hero-stack {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 60px;
+    }
+    .stack-pill {
+      font-size: 11px;
+      color: var(--gray);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      letter-spacing: 0.08em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .stack-pill:hover { border-color: var(--green); color: var(--green); }
+
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border);
+      max-width: 600px;
+    }
+    .hero-stat {
+      background: var(--black2);
+      padding: 24px 28px;
+    }
+    .stat-num {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+      display: block;
+      letter-spacing: -0.03em;
+    }
+    .stat-label { font-size: 11px; color: var(--gray); margin-top: 6px; display: block; letter-spacing: 0.05em; }
+
+    /* Grid background */
+    .grid-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(10,191,83,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10,191,83,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .grid-glow {
+      position: absolute;
+      right: -200px; top: 50%;
+      transform: translateY(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(10,191,83,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      position: relative;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .card-accent {
+      position: absolute;
+      top: 0; left: 0; width: 3px; height: 100%;
+    }
+
+    /* Audit section */
+    .audit-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 2px; background: var(--border);
+    }
+    .audit-col { background: var(--black); }
+    .audit-header {
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .audit-item {
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .audit-item:hover { background: var(--card); }
+    .audit-item:last-child { border-bottom: none; }
+    .audit-item-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .audit-item-body { font-size: 12px; color: var(--gray); line-height: 1.7; }
+    .tag-risk { color: var(--gray); }
+    .tag-opp { color: var(--green); }
+
+    /* N8N-style architecture flow */
+    #arch-diagram {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      user-select: none;
+    }
+    .n8n-canvas {
+      position: relative;
+      min-width: 1100px;
+      height: 440px;
+    }
+    .n8n-canvas.mobile-layout {
+      min-width: unset;
+      height: 820px;
+    }
+    .n8n-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .n8n-wire {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .n8n-wire.active { opacity: 1; }
+    .n8n-wire-dash {
+      fill: none;
+      stroke: var(--border2);
+      stroke-width: 1.5;
+      stroke-dasharray: 5 4;
+      stroke-linecap: round;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .n8n-wire-dash.active { opacity: 1; }
+    .n8n-arrowhead {
+      fill: var(--green);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .n8n-arrowhead.active { opacity: 1; }
+    .n8n-phase-label {
+      position: absolute;
+      top: 0;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--green);
+      transform: translateX(-50%);
+    }
+    .n8n-node {
+      position: absolute;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 16px 14px;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    }
+    .n8n-node.visible { opacity: 1; transform: translateY(0); }
+    .n8n-node:hover, .n8n-node.hovered {
+      border-color: var(--green);
+      background: var(--card2);
+      box-shadow: 0 0 20px rgba(0,122,46,0.25), 0 0 40px rgba(0,122,46,0.1);
+      z-index: 10;
+    }
+    .n8n-node.fired {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(0,122,46,0.2);
+    }
+    .n8n-node.target-lit {
+      border-color: var(--green);
+      animation: targetPulse 0.6s ease forwards;
+    }
+    @keyframes targetPulse {
+      0% { box-shadow: 0 0 0 rgba(0,122,46,0); }
+      50% { box-shadow: 0 0 28px rgba(0,122,46,0.5); }
+      100% { box-shadow: 0 0 16px rgba(0,122,46,0.25); }
+    }
+    .n8n-node-name { font-size: 13px; font-weight: 700; color: var(--white); }
+    .n8n-node-sub { font-size: 10px; color: var(--gray); margin-top: 4px; letter-spacing: 0.03em; }
+    .n8n-secondary {
+      position: absolute;
+      background: var(--black);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--gray);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.25s;
+      cursor: default;
+    }
+    .n8n-secondary.visible { opacity: 1; transform: translateY(0); }
+    .n8n-secondary.lit { border-color: var(--border2); color: var(--white); }
+    .n8n-tooltip {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: var(--black);
+      border: 1px solid var(--green);
+      padding: 10px 14px;
+      font-size: 11px;
+      color: var(--gray);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+      line-height: 1.6;
+      text-align: left;
+      max-width: 220px;
+      white-space: normal;
+    }
+    .n8n-node:hover .n8n-tooltip, .n8n-node.hovered .n8n-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .n8n-hint {
+      font-size: 11px;
+      color: var(--gray2);
+      margin-top: 16px;
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0;
+      transition: opacity 0.5s 1s;
+    }
+    .n8n-hint.visible { opacity: 1; }
+    .n8n-hint span { color: var(--green); }
+
+    .arch-bottom {
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      padding: 14px 20px;
+      font-size: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .arch-bottom .icon { color: var(--green); }
+    .arch-compliance {
+      margin-top: 12px;
+      border: 1px solid rgba(0,122,46,0.3);
+      background: rgba(0,122,46,0.03);
+      padding: 14px 20px;
+      font-size: 12px;
+      display: flex; align-items: center; gap: 10px;
+      color: var(--green);
+    }
+
+    /* System logic steps - typing animation */
+    .logic-steps { display: flex; flex-direction: column; gap: 2px; }
+    .logic-step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 0;
+      background: var(--border);
+    }
+    .logic-num {
+      background: var(--card);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 22px;
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--gray2);
+      letter-spacing: -0.02em;
+      transition: color 0.3s;
+    }
+    .logic-step.typing .logic-num { color: var(--green); }
+    .logic-step.done .logic-num { color: var(--green); }
+    .logic-content {
+      background: var(--black2);
+      padding: 22px 28px;
+    }
+    .logic-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray);
+      margin-bottom: 8px;
+      transition: color 0.3s;
+    }
+    .logic-step.typing .logic-title,
+    .logic-step.done .logic-title { color: var(--white); }
+    .logic-body {
+      font-size: 13px;
+      color: var(--gray);
+      line-height: 1.8;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .logic-cursor {
+      display: inline-block;
+      width: 2px; height: 13px;
+      background: var(--green);
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: cursorBlink 0.7s step-end infinite;
+    }
+    @keyframes cursorBlink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+    .logic-tools {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 0.05em;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .logic-step.done .logic-tools { opacity: 1; transform: translateY(0); }
+
+    /* Security grid */
+    .sec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+    }
+    .sec-card {
+      background: var(--card);
+      padding: 28px;
+      border-top: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .sec-card:hover { border-top-color: var(--green); }
+    .sec-icon { font-size: 28px; margin-bottom: 14px; }
+    .sec-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+    .sec-body { font-size: 12px; color: var(--gray); line-height: 1.8; }
+
+    /* Roadmap */
+    .roadmap-phases {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+    }
+    .roadmap-phase {
+      background: var(--black2);
+    }
+    .roadmap-phase-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .roadmap-phase-week {
+      font-size: 10px;
+      color: var(--gray);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .roadmap-phase-title {
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .roadmap-phase-items { padding: 20px 24px; }
+    .roadmap-item {
+      display: flex; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--gray);
+      line-height: 1.6;
+    }
+    .roadmap-item:last-child { border-bottom: none; }
+    .roadmap-item::before { content: '>'; color: var(--green); flex-shrink: 0; }
+
+    /* Rollout timeline */
+    .rollout-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      background: var(--border);
+      position: relative;
+    }
+    .rollout-step {
+      background: var(--black2);
+    }
+    .rollout-step-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .rollout-week { font-size: 10px; color: var(--gray); letter-spacing: 0.15em; text-transform: uppercase; }
+    .rollout-title { font-size: 14px; font-weight: 700; margin-top: 4px; }
+    .rollout-body { padding: 16px 18px; font-size: 12px; color: var(--gray); line-height: 1.7; }
+    .rollout-outcome {
+      margin-top: 24px;
+      border: 1px solid rgba(10,191,83,0.3);
+      background: rgba(10,191,83,0.04);
+      padding: 18px 24px;
+      font-size: 13px;
+      color: var(--green);
+    }
+    .rollout-outcome strong { color: var(--white); }
+
+    /* AI section */
+    .ai-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--border);
+    }
+    .ai-card {
+      background: var(--card);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0% 100%, rgba(10,191,83,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .ai-card-num {
+      font-family: var(--mono);
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--border2);
+      line-height: 1;
+      position: absolute;
+      top: 16px; right: 20px;
+      letter-spacing: -0.04em;
+      opacity: 0.4;
+    }
+    .ai-icon { font-size: 32px; margin-bottom: 16px; }
+    .ai-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; color: var(--green); }
+    .ai-body { font-size: 13px; color: var(--gray); line-height: 1.8; }
+
+    /* Real world example */
+    .example-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+    }
+    .example-col { background: var(--black2); }
+    .example-col-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .example-col-items { padding: 18px 22px; }
+    .example-item {
+      display: flex; gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--gray);
+      line-height: 1.6;
+    }
+    .example-item:last-child { border-bottom: none; }
+    .example-item::before { content: '>'; flex-shrink: 0; }
+    .col-red .example-col-header { color: var(--gray); }
+    .col-red .example-item::before { color: var(--gray); }
+    .col-blue .example-col-header { color: var(--green); }
+    .col-blue .example-item::before { color: var(--green); }
+    .col-green .example-col-header { color: var(--green); }
+    .col-green .example-item::before { color: var(--green); }
+
+    .example-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--border);
+      margin-top: 2px;
+    }
+    .example-metric {
+      background: var(--card);
+      padding: 22px 24px;
+    }
+    .metric-val {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--green);
+      display: block;
+      letter-spacing: -0.03em;
+    }
+    .metric-label { font-size: 11px; color: var(--gray); margin-top: 4px; display: block; }
+
+    /* Closing */
+    #closing {
+      min-height: 60vh;
+      display: flex; align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    .closing-inner { max-width: 800px; }
+    .closing-title { color: var(--white); margin-bottom: 24px; }
+    .closing-title span { color: var(--green); }
+    .closing-sub { font-size: 16px; color: var(--gray); line-height: 1.9; max-width: 600px; margin-bottom: 48px; }
+    .closing-pills {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .closing-pill {
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 10px 22px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .closing-meta {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--gray2);
+    }
+    .closing-meta strong { color: var(--white); }
+
+    /* Dividers */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 60px 0;
+    }
+
+    /* Glitch effect on heading */
+    @keyframes glitch1 {
+      0%,100%{clip-path:polygon(0 0,100% 0,100% 33%,0 33%);}
+      50%{clip-path:polygon(0 10%,100% 10%,100% 40%,0 40%);}
+    }
+    @keyframes glitch2 {
+      0%,100%{clip-path:polygon(0 66%,100% 66%,100% 100%,0 100%);}
+      50%{clip-path:polygon(0 55%,100% 55%,100% 88%,0 88%);}
+    }
+    .glitch-wrap { position: relative; display: inline-block; }
+    .glitch-wrap::before, .glitch-wrap::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      color: var(--green);
+      opacity: 0;
+    }
+    .glitch-wrap:hover::before {
+      opacity: 0.8;
+      animation: glitch1 0.3s steps(2) infinite;
+      transform: translate(-2px, 0);
+      color: #0f0;
+      text-shadow: 2px 0 #f00;
+    }
+    .glitch-wrap:hover::after {
+      opacity: 0.8;
+      animation: glitch2 0.3s steps(2) infinite;
+      transform: translate(2px, 0);
+      color: #0f0;
+      text-shadow: -2px 0 #00f;
+    }
+
+    /* Typewriter */
+    .typewriter {
+      display: inline;
+      border-right: 2px solid var(--green);
+      animation: blink 0.8s step-end infinite;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    @keyframes blink { 0%,100%{border-color:var(--green);} 50%{border-color:transparent;} }
+
+    /* Context tag */
+    .context-box {
+      border: 1px solid var(--border2);
+      background: var(--card);
+      padding: 16px 22px;
+      margin-bottom: 40px;
+      font-size: 12px;
+      color: var(--gray);
+      line-height: 1.7;
+    }
+    .context-box strong { color: var(--white); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--green2); }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      section { padding: 100px 24px 60px; }
+      #arch-diagram { -webkit-overflow-scrolling: touch; }
+      .n8n-hint { display: none; }
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero-stats { grid-template-columns: 1fr 1fr; }
+      .audit-grid { grid-template-columns: 1fr; }
+      .sec-grid { grid-template-columns: 1fr; }
+      .roadmap-phases { grid-template-columns: 1fr; }
+      .rollout-steps { grid-template-columns: 1fr; }
+      .ai-grid { grid-template-columns: 1fr; }
+      .example-cols { grid-template-columns: 1fr; }
+      .example-metrics { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Color accents per phase */
+    .accent-green { background: var(--green); }
+    .accent-blue { background: var(--green); }
+    .accent-orange { background: var(--green); }
+    .accent-purple { background: var(--green2); }
+    .accent-teal { background: var(--green); }
+    .accent-red { background: var(--gray); }
+
+    /* Inline highlight */
+    .hl { color: var(--green); }
+    .hl-dim { color: var(--gray); }
+
+    /* Horizontal scroll hint */
+    .scroll-hint { font-size: 11px; color: var(--gray2); margin-top: 12px; display: flex; align-items: center; gap: 8px; }
+    .scroll-hint::before { content: '←'; color: var(--green); animation: hscroll 1.5s ease infinite alternate; }
+    .scroll-hint::after { content: '→'; color: var(--green); animation: hscroll 1.5s ease infinite alternate-reverse; }
+    @keyframes hscroll { to { transform: translateX(5px); } }
+  </style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Progress bar -->
+<div id="progress"></div>
+
+<!-- Boot screen -->
+<div id="boot">
+  <div class="boot-line" style="animation-delay:0.1s">
+    <span>SYS</span> :: initializing GTM architecture module...
+  </div>
+  <div class="boot-line" style="animation-delay:0.5s">
+    <span>LOAD</span> :: vladan-mitic.case-study/adyen.v1
+  </div>
+  <div class="boot-line" style="animation-delay:0.9s">
+    <span>STACK</span> :: Salesforce + LeanData + ZoomInfo + Clay + Gong + Calendly
+  </div>
+  <div class="boot-line" style="animation-delay:1.3s">
+    <span>OK</span> :: all systems nominal. rendering...
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">VM<span>_</span></div>
+  <div class="nav-links">
+    <a href="#audit">01 audit</a>
+    <a href="#architecture">02 architecture</a>
+    <a href="#security">03 security</a>
+    <a href="#roadmap">04 roadmap</a>
+    <a href="#ai">05 ai</a>
+    <a href="#example">06 example</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="grid-bg"></div>
+  <div class="grid-glow"></div>
+  <div class="container hero-inner">
+    <div class="hero-tag reveal">
+      <span class="dot"></span>
+      Lead GTM Automation Engineer &nbsp;/&nbsp; Case Study
+    </div>
+    <h1 class="hero-title reveal reveal-delay-1">
+      <span class="line1">Lead-to-Opportunity.</span>
+      <span class="line2 glitch-wrap" data-text="Done right.">Done right.</span>
+    </h1>
+    <p class="hero-sub reveal reveal-delay-2">
+      The tools are there. The problem is how they talk to each other. This is my architecture for fixing the lead-to-opportunity motion — how I would build it, in what order, and why.
+    </p>
+    <div class="hero-stack reveal reveal-delay-3">
+      <span class="stack-pill">Salesforce</span>
+      <span class="stack-pill">LeanData</span>
+      <span class="stack-pill">ZoomInfo</span>
+      <span class="stack-pill">Clay</span>
+      <span class="stack-pill">Gong</span>
+      <span class="stack-pill">Calendly</span>
+      <span class="stack-pill">LinkedIn SN</span>
+      <span class="stack-pill">Slack</span>
+    </div>
+    <div class="hero-stats reveal reveal-delay-4">
+      <div class="hero-stat">
+        <span class="stat-num" data-target="90" data-suffix="%">0%</span>
+        <span class="stat-label">Manual entry eliminated</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num" data-target="90" data-suffix="s">&lt;90s</span>
+        <span class="stat-label">Lead assignment SLA</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num" data-target="95" data-suffix="%">0%</span>
+        <span class="stat-label">Target routing accuracy</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIT -->
+<section id="audit">
+  <div class="container">
+    <div class="section-label reveal">01 Technical Audit</div>
+    <h2 class="reveal reveal-delay-1">Where the stack leaks.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
+      I audit before I build. Every time. You cannot fix what you have not mapped.
+    </p>
+
+    <div class="context-box reveal reveal-delay-2">
+      <strong>How I audit:</strong> 90 days of routing data. Field-by-field mapping across all 7 tools. Talk to 5 SDRs and 3 AEs. Pull API logs and find where governor limits get hit. Then I start building.
+    </div>
+
+    <div class="audit-grid reveal reveal-delay-3">
+      <div class="audit-col">
+        <div class="audit-header tag-risk">// risks</div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-risk">01</span> Duplicate lead ingestion</div>
+          <div class="audit-item-body">ZoomInfo, Clay, and LinkedIn SN are all pushing leads into Salesforce with no shared dedup logic. Reps get assigned the same contact from three sources. They stop trusting assignments. Once that trust is gone, the whole pipeline stops working.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-risk">02</span> Enrichment field conflicts</div>
+          <div class="audit-item-body">No waterfall defined. ZoomInfo and Clay both write to the same fields. Last sync wins. ZoomInfo says company size is 500, Clay says 50. LeanData routes on company size. Wrong territory every time. This is not a data problem — it is an architecture problem.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-risk">03</span> LeanData catch-all queue</div>
+          <div class="audit-item-body">Leads that do not match routing rules fall into a generic queue with no SLA and no owner. Nobody monitors it. High-intent leads go cold in there and nobody notices until a rep asks about a dead deal weeks later.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-risk">04</span> API rate limit exposure</div>
+          <div class="audit-item-body">Enrichment calls on inbound spikes hit Salesforce governor limits and fail silently. No alert, no retry, no log. Leads just do not get enriched. Nobody finds out until a rep asks why a field is empty three days later.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-risk">05</span> Gong data stays in Gong</div>
+          <div class="audit-item-body">Pricing questions, competitor mentions, buying signals — Gong captures all of it. None of it feeds back into routing or scoring. Reps update CRM manually after every call while that intelligence just sits there unused.</div>
+        </div>
+      </div>
+      <div class="audit-col">
+        <div class="audit-header tag-opp">// opportunities</div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-opp">01</span> Unified enrichment waterfall</div>
+          <div class="audit-item-body">Define field ownership once. Clay runs first on lead create. ZoomInfo verifies and fills gaps 24 hours later. Each field gets a confidence score. Routing only fires on high-confidence data. This one change alone kills most of the routing errors.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-opp">02</span> Gong signals into routing</div>
+          <div class="audit-item-body">Connect Gong to LeanData via API. A lead that asked about pricing on a call should jump the queue. Right now that signal disappears after the recording. Wire it in and Gong becomes a live routing input, not just a coaching tool.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-opp">03</span> Sub-90 second assignment via Slack</div>
+          <div class="audit-item-body">LeanData assigns a lead. Slack DM fires to the rep instantly. Name, company, source, enriched data, direct Salesforce link. Rep knows before they finish reading the previous email. No queue-checking, no dashboard refreshing.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-opp">04</span> Calendly to sequence automation</div>
+          <div class="audit-item-body">Meeting booked on Calendly: SF sequence pauses automatically. Meeting cancelled: sequence resumes with a follow-up step. Right now this is manual and happens maybe half the time. Automate it and it happens every time.</div>
+        </div>
+        <div class="audit-item">
+          <div class="audit-item-title"><span class="tag-opp">05</span> Catch-all queue with an actual SLA</div>
+          <div class="audit-item-body">Every unmatched lead lands in an ops queue with a 2-hour SLA and a Slack alert. Someone owns it. Someone reviews it. Nothing sits invisible. Every lead gets a decision.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" style="background:var(--black2);">
+  <div class="container">
+    <div class="section-label reveal">02 Architecture</div>
+    <h2 class="reveal reveal-delay-1">The flow, mapped out.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
+      Lead comes in as noise. Goes out as a qualified opportunity with context already in the record and a rep already notified.
+    </p>
+
+    <div id="arch-diagram" class="reveal reveal-delay-2">
+      <div class="n8n-canvas" id="n8n-canvas">
+        <!-- SVG wire layer -->
+        <svg class="n8n-svg" id="n8n-svg"></svg>
+
+        <!-- Phase labels -->
+        <div class="n8n-phase-label" style="left:11%;top:90px">ingest</div>
+        <div class="n8n-phase-label" style="left:29%;top:90px">enrich</div>
+        <div class="n8n-phase-label" style="left:50%;top:90px">route</div>
+        <div class="n8n-phase-label" style="left:71%;top:90px">engage</div>
+        <div class="n8n-phase-label" style="left:89%;top:90px">convert</div>
+
+        <!-- Main nodes -->
+        <div class="n8n-node" id="node-0" data-index="0" data-desktop-top="134" data-desktop-left="11" style="width:155px;top:134px;left:calc(11% - 78px)">
+          <div class="n8n-node-name">ZoomInfo</div>
+          <div class="n8n-node-sub">Intent signals</div>
+          <div class="n8n-tooltip">Identifies high-intent accounts and pushes them into the pipeline. First touch before any enrichment.</div>
+        </div>
+        <div class="n8n-node" id="node-1" data-index="1" data-desktop-top="134" data-desktop-left="29" style="width:155px;top:134px;left:calc(29% - 78px)">
+          <div class="n8n-node-name">Clay</div>
+          <div class="n8n-node-sub">Primary enrichment</div>
+          <div class="n8n-tooltip">Runs first. Firmographic, technographic, headcount, funding. Owns the field. ZoomInfo only fills gaps.</div>
+        </div>
+        <div class="n8n-node" id="node-2" data-index="2" data-desktop-top="134" data-desktop-left="50" style="width:155px;top:134px;left:calc(50% - 78px)">
+          <div class="n8n-node-name">LeanData</div>
+          <div class="n8n-node-sub">Rules engine</div>
+          <div class="n8n-tooltip">Territory, ownership, capacity, round-robin. Match in under 60s. No match: ops queue with a 2hr SLA.</div>
+        </div>
+        <div class="n8n-node" id="node-3" data-index="3" data-desktop-top="134" data-desktop-left="71" style="width:155px;top:134px;left:calc(71% - 78px)">
+          <div class="n8n-node-name">SF Sales Eng.</div>
+          <div class="n8n-node-sub">Auto sequences</div>
+          <div class="n8n-tooltip">Right sequence, right persona. Calendly booked: pauses. Cancelled: resumes. No manual step.</div>
+        </div>
+        <div class="n8n-node" id="node-4" data-index="4" data-desktop-top="134" data-desktop-left="89" style="width:155px;top:134px;left:calc(89% - 78px)">
+          <div class="n8n-node-name">Salesforce</div>
+          <div class="n8n-node-sub">Opportunity</div>
+          <div class="n8n-tooltip">Opportunity created with enrichment pre-filled. Rep opens a record with context already in it.</div>
+        </div>
+
+        <!-- Secondary nodes row 1 -->
+        <div class="n8n-secondary" id="sec-0a" style="width:140px;top:270px;left:calc(11% - 70px)">LinkedIn SN</div>
+        <div class="n8n-secondary" id="sec-1a" style="width:140px;top:270px;left:calc(29% - 70px)">ZoomInfo (verify)</div>
+        <div class="n8n-secondary" id="sec-2a" style="width:140px;top:270px;left:calc(50% - 70px)">Salesforce Lead</div>
+        <div class="n8n-secondary" id="sec-3a" style="width:140px;top:270px;left:calc(71% - 70px)">Calendly booking</div>
+        <div class="n8n-secondary" id="sec-4a" style="width:140px;top:270px;left:calc(89% - 70px)">Gong AI summary</div>
+
+        <!-- Secondary nodes row 2 -->
+        <div class="n8n-secondary" id="sec-0b" style="width:140px;top:342px;left:calc(11% - 70px)">Web forms</div>
+        <div class="n8n-secondary" id="sec-1b" style="width:140px;top:342px;left:calc(29% - 70px)">Dedup check</div>
+        <div class="n8n-secondary" id="sec-2b" style="width:140px;top:342px;left:calc(50% - 70px)">Slack alert</div>
+        <div class="n8n-secondary" id="sec-3b" style="width:140px;top:342px;left:calc(71% - 70px)">Gong call</div>
+        <div class="n8n-secondary" id="sec-4b" style="width:140px;top:342px;left:calc(89% - 70px)">Rep next steps</div>
+      </div>
+
+      <div class="n8n-hint" id="n8n-hint">
+        <span>&#8594;</span> hover or click any node to trace the flow
+      </div>
+
+      <div class="arch-bottom" style="background:var(--card);border-color:var(--border);margin-top:20px;">
+        <span class="icon">&#9889;</span>
+        <span><strong>Slack</strong> fires a DM to the assigned rep the moment routing happens. Full context included. No queue to check.</span>
+      </div>
+      <div class="arch-compliance">
+        <span>&#128274;</span>
+        <span>GDPR + PCI-DSS compliance layer sits at every integration point. PII masking, consent tracking, EU data residency — enforced before any record moves between tools.</span>
+      </div>
+    </div>
+    <div class="scroll-hint reveal" style="display:none"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-label reveal">02b System logic</div>
+    <h3 style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-bottom:32px;" class="reveal reveal-delay-1">How the tools actually talk.</h3>
+
+    <div class="logic-steps" id="logic-steps">
+      <div class="logic-step" data-step="0">
+        <div class="logic-num">01</div>
+        <div class="logic-content">
+          <div class="logic-title">Lead ingestion and dedup</div>
+          <div class="logic-body" data-text="Lead comes in from ZoomInfo, LinkedIn SN, or a web form. Clay runs a dedup check against existing Salesforce records before anything is created. Fuzzy match on email domain and company name. Match found: merge and update. No match: create. Duplicates stop here."></div>
+          <div class="logic-tools">Clay + LinkedIn SN + ZoomInfo</div>
+        </div>
+      </div>
+      <div class="logic-step" data-step="1">
+        <div class="logic-num">02</div>
+        <div class="logic-content">
+          <div class="logic-title">Enrichment waterfall</div>
+          <div class="logic-body" data-text="Clay enriches first. Firmographic, technographic, headcount, funding. ZoomInfo runs 24 hours later in verify-and-fill mode only. It cannot overwrite what Clay confirmed. Every field on the lead record gets a confidence score. Low confidence: flagged for rep review. High confidence: passes to routing."></div>
+          <div class="logic-tools">Clay then ZoomInfo then Salesforce field write</div>
+        </div>
+      </div>
+      <div class="logic-step" data-step="2">
+        <div class="logic-num">03</div>
+        <div class="logic-content">
+          <div class="logic-title">Routing via LeanData</div>
+          <div class="logic-body" data-text="Enriched lead hits LeanData. Rules check territory, account ownership, capacity, round-robin. Match found: assigned within 60 seconds, Slack DM fires to the rep. No match: ops queue with a 2-hour SLA and a Slack alert. No lead disappears without a decision."></div>
+          <div class="logic-tools">LeanData then Salesforce assignment then Slack</div>
+        </div>
+      </div>
+      <div class="logic-step" data-step="3">
+        <div class="logic-num">04</div>
+        <div class="logic-content">
+          <div class="logic-title">Engagement sequence</div>
+          <div class="logic-body" data-text="Assignment triggers automatic enrollment in the right SF Sales Engagement sequence based on persona and source. Calendly link in the first touch. Meeting booked: sequence pauses. Meeting cancelled: sequence resumes with a follow-up. Gong call done: AI summary syncs to Salesforce with next steps filled in. Rep does not open CRM after the call."></div>
+          <div class="logic-tools">SF Sales Engagement + Calendly webhook + Gong API</div>
+        </div>
+      </div>
+      <div class="logic-step" data-step="4">
+        <div class="logic-num">05</div>
+        <div class="logic-content">
+          <div class="logic-title">Lead to opportunity conversion</div>
+          <div class="logic-body" data-text="Conversion triggers when a meeting is held or lead score crosses the threshold. Opportunity is created automatically with enrichment data pre-filled: company, territory, deal size estimate, competitive context from Gong. Rep gets a record with context already in it. Not a blank form."></div>
+          <div class="logic-tools">Salesforce workflow + Gong signal + lead score threshold</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="security">
+  <div class="container">
+    <div class="section-label reveal">03 Security &amp; Compliance</div>
+    <h2 class="reveal reveal-delay-1">Adyen is a FinTech.<br>Compliance is not a feature.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
+      Every integration decision starts with GDPR and PCI-DSS. Not a checkbox at the end of the project.
+    </p>
+
+    <div class="sec-grid reveal reveal-delay-2">
+      <div class="sec-card">
+        <div class="sec-icon">&#128274;</div>
+        <div class="sec-title">GDPR at ingestion</div>
+        <div class="sec-body">Every lead record carries consent origin, timestamp, and lawful basis. Leads without verifiable consent get flagged before enrichment runs. Enforced in the Clay workflow — not left to reps to manage.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">&#128179;</div>
+        <div class="sec-title">PCI-DSS pathway isolation</div>
+        <div class="sec-body">GTM tools never store or transit payment data. Every API connection is scoped and audited before going live. Full access trail across ZoomInfo, Clay, and Salesforce.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">&#127760;</div>
+        <div class="sec-title">EU data residency</div>
+        <div class="sec-body">ZoomInfo, Clay, and Salesforce instances verified for EU residency in the audit phase. Not assumed. If an instance is not compliant, the integration does not go live.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">&#128272;</div>
+        <div class="sec-title">API key governance</div>
+        <div class="sec-body">All credentials in a secrets manager. Never hardcoded. Quarterly rotation enforced. Least-privilege scopes only — if a tool needs read access, it does not get write access.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">&#128203;</div>
+        <div class="sec-title">Data minimization</div>
+        <div class="sec-body">Only enrich fields with a documented business purpose. Not everything available just because it is there. Less data stored means less exposure.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">&#128680;</div>
+        <div class="sec-title">Audit logs and alerts</div>
+        <div class="sec-body">Every automated action is logged with timestamp, trigger, and actor. Slack alert fires immediately if enrichment tries to run on an opted-out lead or a routing action bypasses normal rules.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" style="background:var(--black2);">
+  <div class="container">
+    <div class="section-label reveal">04 Execution</div>
+    <h2 class="reveal reveal-delay-1">16 weeks. Three phases.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
+      Quick wins first. Core architecture second. Intelligence layer third. Skip the audit and the whole thing breaks.
+    </p>
+
+    <div class="roadmap-phases reveal reveal-delay-3">
+      <div class="roadmap-phase">
+        <div class="roadmap-phase-header" style="border-top:3px solid var(--green);">
+          <div class="roadmap-phase-week">Weeks 1 to 4</div>
+          <div class="roadmap-phase-title" style="color:var(--green);">Audit + Quick Wins</div>
+        </div>
+        <div class="roadmap-phase-items">
+          <div class="roadmap-item">Full data flow audit. Every field, every sync direction, every trigger condition across all 7 tools.</div>
+          <div class="roadmap-item">Dedup rules in Clay before any lead hits Salesforce.</div>
+          <div class="roadmap-item">LeanData catch-all queue fixed. Every unmatched lead gets an SLA and an owner.</div>
+          <div class="roadmap-item">Slack notifications live for every assignment. Rep knows in under 60 seconds.</div>
+          <div class="roadmap-item">Rep interviews done. Find out what they ignore and what they manually work around.</div>
+        </div>
+      </div>
+      <div class="roadmap-phase">
+        <div class="roadmap-phase-header" style="border-top:3px solid var(--green);">
+          <div class="roadmap-phase-week">Weeks 5 to 10</div>
+          <div class="roadmap-phase-title" style="color:var(--green);">Core Architecture</div>
+        </div>
+        <div class="roadmap-phase-items">
+          <div class="roadmap-item">Enrichment waterfall live. Clay first, ZoomInfo verifies. Field ownership matrix enforced.</div>
+          <div class="roadmap-item">LeanData routing rules rebuilt from scratch. Tested against 30 days of historical data in sandbox.</div>
+          <div class="roadmap-item">SF Sales Engagement auto-enroll. Right sequence, right persona, every time.</div>
+          <div class="roadmap-item">Calendly webhook connected. Meeting booked pauses sequence. Cancelled resumes it.</div>
+          <div class="roadmap-item">Compliance layer active. Consent flags, data residency verified, PII masking on.</div>
+        </div>
+      </div>
+      <div class="roadmap-phase">
+        <div class="roadmap-phase-header" style="border-top:3px solid var(--green2);">
+          <div class="roadmap-phase-week">Weeks 11 to 16</div>
+          <div class="roadmap-phase-title" style="color:var(--green2);">Intelligence Layer</div>
+        </div>
+        <div class="roadmap-phase-items">
+          <div class="roadmap-item">Gong signals wired into LeanData routing priority.</div>
+          <div class="roadmap-item">Lead scoring v1. Intent plus engagement plus firmographic fit.</div>
+          <div class="roadmap-item">AI routing recommendations for edge cases LeanData rules cannot handle.</div>
+          <div class="roadmap-item">Full ops dashboard. Routing accuracy, assignment time, sequence conversion by persona.</div>
+          <div class="roadmap-item">Documentation done. Team trained. System runs without me watching it.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label reveal">04b Rollout plan</div>
+    <h3 style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-bottom:12px;" class="reveal reveal-delay-1">LeanData routing rebuild, week by week.</h3>
+    <p style="color:var(--gray);font-size:13px;margin-bottom:32px;" class="reveal reveal-delay-2">
+      Routing errors kill rep trust faster than anything else. I fix this first so everything built after it lands on solid ground.
+    </p>
+
+    <div class="rollout-steps reveal reveal-delay-2">
+      <div class="rollout-step">
+        <div class="rollout-step-header" style="border-top:3px solid var(--green);">
+          <div class="rollout-week">Week 1</div>
+          <div class="rollout-title">Baseline</div>
+        </div>
+        <div class="rollout-body">Pull 90 days of routing data. Current match rate, assignment time, catch-all volume, rep-reported errors. Set the targets: 95% match rate, sub-90s assignment, zero unaddressed catch-all leads.</div>
+      </div>
+      <div class="rollout-step">
+        <div class="rollout-step-header" style="border-top:3px solid var(--green);">
+          <div class="rollout-week">Week 2</div>
+          <div class="rollout-title">Rules audit</div>
+        </div>
+        <div class="rollout-body">Map every LeanData rule. Find conflicts, stale conditions, and gaps. Talk to the top 3 territory ops reps. What do they manually fix every week? That is exactly where the rules are broken.</div>
+      </div>
+      <div class="rollout-step">
+        <div class="rollout-step-header" style="border-top:3px solid var(--green2);">
+          <div class="rollout-week">Week 3</div>
+          <div class="rollout-title">Sandbox build</div>
+        </div>
+        <div class="rollout-body">New rules built in sandbox. Run against 30 days of historical leads. Zero catch-all escapes in simulation. Every unmatched case gets either a rule or a manual ops step.</div>
+      </div>
+      <div class="rollout-step">
+        <div class="rollout-step-header" style="border-top:3px solid var(--green);">
+          <div class="rollout-week">Week 4</div>
+          <div class="rollout-title">Parallel run</div>
+        </div>
+        <div class="rollout-body">New rules run in shadow mode alongside old rules. Outputs compared daily. Every divergence reviewed. Nothing goes live until 5 clean days in a row. Rollback plan documented and tested.</div>
+      </div>
+      <div class="rollout-step">
+        <div class="rollout-step-header" style="border-top:3px solid var(--green);">
+          <div class="rollout-week">Week 5</div>
+          <div class="rollout-title">Cutover</div>
+        </div>
+        <div class="rollout-body">Flip to new rules. Slack channel open for issues with a 30-minute response SLA. Daily review for 2 weeks. Rollback plan stays ready for 30 days.</div>
+      </div>
+    </div>
+
+    <div class="rollout-outcome reveal reveal-delay-3">
+      <strong>Target outcome:</strong> routing accuracy from 61% to 94%. Lead-to-first-touch from 4+ hours to under 40 minutes. Manual corrections down 87%. Reps trust the system again.
+    </div>
+  </div>
+</section>
+
+<!-- AI VISION -->
+<section id="ai">
+  <div class="container">
+    <div class="section-label reveal">05 AI Vision</div>
+    <h2 class="reveal reveal-delay-1">Beyond standard automation.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
+      AI in GTM is not about replacing reps. It is about giving them better information, faster. Here is how I would actually use it — not as a demo, in production.
+    </p>
+
+    <div class="ai-grid reveal reveal-delay-3">
+      <div class="ai-card">
+        <div class="ai-card-num">01</div>
+        <div class="ai-icon">&#129504;</div>
+        <div class="ai-title">LLM lead scoring with context</div>
+        <div class="ai-body">Standard scoring gives a number. An LLM gives a reason. Feed Gong transcripts, email engagement, and ZoomInfo data into a model via API. Output goes into Salesforce as plain text: "This lead mentioned a competitor three times and asked about pricing. Meeting was scheduled twice and cancelled once. High priority." A score of 87 tells a rep nothing. That sentence tells them everything.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-num">02</div>
+        <div class="ai-icon">&#127919;</div>
+        <div class="ai-title">AI routing for the hard cases</div>
+        <div class="ai-body">LeanData handles the 90% with clear rules. The other 10% — shared account ownership, new territories, acquired companies — is where routing breaks. For those edge cases, an LLM looks at account history, similar won deals, and rep capacity to suggest the best assignment with a reason. Human still decides. But they decide with better information.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-num">03</div>
+        <div class="ai-icon">&#128222;</div>
+        <div class="ai-title">Gong to automatic CRM updates</div>
+        <div class="ai-body">After every Gong call, the AI summary triggers a Salesforce update via API. Next steps populated. Stage updated. Follow-up task created. Pain points logged in the opportunity record. Reps spend 20 to 30 minutes on CRM updates after every call right now. Automate it and it happens in seconds. Every time. No exceptions.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-num">04</div>
+        <div class="ai-icon">&#9881;</div>
+        <div class="ai-title">Clay AI columns for personalization</div>
+        <div class="ai-body">Clay supports AI columns natively. Run each lead through a research agent that pulls recent account news, identifies the buyer context, and generates a personalization hook for the first email. Not a merged template field. An actual relevant angle based on what is happening at that company right now. Scales personalization without scaling headcount.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REAL WORLD EXAMPLE -->
+<section id="example" style="background:var(--black2);">
+  <div class="container">
+    <div class="section-label reveal">06 Real World Example</div>
+    <h2 class="reveal reveal-delay-1">I have done this before.</h2>
+    <p style="color:var(--gray);font-size:14px;margin:16px 0 32px;max-width:600px;" class="reveal reveal-delay-2">
+      Enrichment waterfall rebuild at a B2B SaaS company. Similar stack, same root cause.
+    </p>
+
+    <div class="context-box reveal reveal-delay-2">
+      <strong>Setup:</strong> ~800 leads per month. ZoomInfo and Clearbit feeding into Salesforce. 40% of routing failures traced to conflicting enrichment data. LeanData routing on company size — two sources disagreed on 42% of records.
+    </div>
+
+    <div class="example-cols reveal reveal-delay-3">
+      <div class="example-col col-red">
+        <div class="example-col-header">The problem</div>
+        <div class="example-col-items">
+          <div class="example-item">ZoomInfo and Clearbit writing to the same fields. No priority logic.</div>
+          <div class="example-item">Last API sync wins. No way to know which source wrote the value.</div>
+          <div class="example-item">42% mismatch rate on company size. LeanData routing breaks on it.</div>
+          <div class="example-item">Reps routed to wrong territories daily. They start ignoring assignments.</div>
+          <div class="example-item">4 SDRs spending 30% of their week manually fixing routing errors.</div>
+        </div>
+      </div>
+      <div class="example-col col-blue">
+        <div class="example-col-header">What I built</div>
+        <div class="example-col-items">
+          <div class="example-item">Field ownership matrix. One primary source per field. No exceptions.</div>
+          <div class="example-item">Clearbit enriches on lead create. ZoomInfo fills gaps 24 hours later.</div>
+          <div class="example-item">Confidence score on every lead. Routing rules only fire above the threshold.</div>
+          <div class="example-item">Catch-all queue rebuilt. 2-hour SLA. Slack alert to ops on every entry.</div>
+          <div class="example-item">2-week parallel run before cutover. Rollback plan ready the whole time.</div>
+        </div>
+      </div>
+      <div class="example-col col-green">
+        <div class="example-col-header">90 days later</div>
+        <div class="example-col-items">
+          <div class="example-item">Routing accuracy: 61% to 94%.</div>
+          <div class="example-item">Manual corrections down 87%. SDRs stopped asking ops to fix assignments.</div>
+          <div class="example-item">Lead-to-first-touch: 4.2 hours to 38 minutes.</div>
+          <div class="example-item">SDR productivity up 23% on meetings booked per week.</div>
+          <div class="example-item">Ops team redeployed to higher value work within 60 days.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-metrics reveal reveal-delay-4">
+      <div class="example-metric">
+        <span class="metric-val" data-target="94" data-suffix="%">0%</span>
+        <span class="metric-label">Routing accuracy achieved</span>
+      </div>
+      <div class="example-metric">
+        <span class="metric-val" data-target="87" data-suffix="%">0%</span>
+        <span class="metric-label">Less manual corrections</span>
+      </div>
+      <div class="example-metric">
+        <span class="metric-val" data-target="38" data-suffix="min">0min</span>
+        <span class="metric-label">Lead-to-first-touch</span>
+      </div>
+      <div class="example-metric">
+        <span class="metric-val" data-target="23" data-suffix="%">0%</span>
+        <span class="metric-label">SDR productivity gain</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section id="closing">
+  <div class="container">
+    <div class="closing-inner">
+      <div class="section-label reveal">// the goal</div>
+      <h2 class="closing-title reveal reveal-delay-1">
+        When it works,<br>
+        <span>reps forget it exists.</span>
+      </h2>
+      <p class="closing-sub reveal reveal-delay-2">
+        They open Salesforce and the lead is there. Context is there. Sequence is running. They did not set any of that up. They just sell. That is what good automation looks like.
+      </p>
+      <div class="closing-pills reveal reveal-delay-3">
+        <span class="closing-pill">Audit first</span>
+        <span class="closing-pill">Build for scale</span>
+        <span class="closing-pill">Design for humans</span>
+      </div>
+      <div class="closing-meta reveal reveal-delay-4">
+        <strong>Vladan Mitic</strong> &nbsp;&nbsp;/&nbsp;&nbsp; Lead GTM Automation Engineer &nbsp;&nbsp;/&nbsp;&nbsp; 2026
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ── Cursor ──────────────────────────────────────────────
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+    rx += (mx - rx - 18) * 0.12;
+    ry += (my - ry - 18) * 0.12;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+
+  // ── Boot ────────────────────────────────────────────────
+  const boot = document.getElementById('boot');
+  setTimeout(() => {
+    boot.classList.add('hidden');
+    setTimeout(() => { boot.style.display = 'none'; }, 600);
+  }, 2000);
+
+  // ── Progress bar ────────────────────────────────────────
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const st = document.documentElement.scrollTop;
+    const sh = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    progress.style.width = (st / sh * 100) + '%';
+  });
+
+  // ── Reveal on scroll ────────────────────────────────────
+  const reveals = document.querySelectorAll('.reveal');
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => revealObs.observe(r));
+
+  // ── Count up ────────────────────────────────────────────
+  function countUp(el) {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1800;
+    const start = performance.now();
+    function step(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(eased * target) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const statObs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('[data-target]').forEach(el => countUp(el));
+        statObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.hero-stats, .example-metrics').forEach(el => statObs.observe(el));
+
+  // ── Nav active ──────────────────────────────────────────
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.getAttribute('id'); });
+    navLinks.forEach(a => { a.style.color = a.getAttribute('href') === '#' + current ? 'var(--green)' : ''; });
+  });
+
+  // ── N8N FLOW DIAGRAM ────────────────────────────────────
+  function initN8nFlow() {
+    const canvas = document.getElementById('n8n-canvas');
+    const svgEl = document.getElementById('n8n-svg');
+    if (!canvas || !svgEl) return;
+
+    const mainNodes = [0,1,2,3,4].map(i => document.getElementById('node-' + i));
+    const secA = [0,1,2,3,4].map(i => document.getElementById('sec-' + i + 'a'));
+    const secB = [0,1,2,3,4].map(i => document.getElementById('sec-' + i + 'b'));
+
+    // Mobile layout detection
+    const MOBILE_BP = 768;
+    let isMobile = window.innerWidth <= MOBILE_BP;
+
+    // Desktop layout constants (% of canvas width)
+    const desktopLeftPct = [11, 29, 50, 71, 89];
+    const desktopTop = 134;
+    const secATop = 270;
+    const secBTop = 342;
+
+    // Mobile layout constants (vertical stack)
+    const mobileNodeTop  = [60, 200, 340, 480, 620];
+    const mobileSecATop  = [160, 300, 440, 580, 720];
+    const mobileSecBTop  = [200, 340, 480, 620, 760]; // Not shown on mobile, kept for wire calc
+    const mobileNodeLeft = 50; // % from left, centered
+    const mobileNodeW    = 160;
+    const mobileSecW     = 140;
+
+    function applyDesktopLayout() {
+      canvas.classList.remove('mobile-layout');
+      canvas.style.height = '440px';
+      mainNodes.forEach((node, i) => {
+        if (!node) return;
+        node.style.width = '155px';
+        node.style.top = desktopTop + 'px';
+        node.style.left = 'calc(' + desktopLeftPct[i] + '% - 78px)';
+        node.style.transform = '';
+      });
+      const secLeftsA = desktopLeftPct.map(p => 'calc(' + p + '% - 70px)');
+      secA.forEach((s, i) => { if (!s) return; s.style.top = secATop + 'px'; s.style.left = secLeftsA[i]; s.style.width = '140px'; s.style.display = ''; });
+      secB.forEach((s, i) => { if (!s) return; s.style.top = secBTop + 'px'; s.style.left = secLeftsA[i]; s.style.width = '140px'; s.style.display = ''; });
+    }
+
+    function applyMobileLayout() {
+      canvas.classList.add('mobile-layout');
+      canvas.style.height = '780px';
+      mainNodes.forEach((node, i) => {
+        if (!node) return;
+        node.style.width = mobileNodeW + 'px';
+        node.style.top = mobileNodeTop[i] + 'px';
+        node.style.left = 'calc(50% - ' + (mobileNodeW/2) + 'px)';
+        node.style.transform = '';
+      });
+      // Show secA beside each node (to the right), hide secB on mobile
+      secA.forEach((s, i) => {
+        if (!s) return;
+        s.style.top = mobileSecATop[i] + 'px';
+        s.style.left = 'calc(50% - 70px)';
+        s.style.width = '140px';
+        s.style.display = '';
+      });
+      secB.forEach(s => { if(s) s.style.display = 'none'; });
+    }
+
+    function layoutFlow() {
+      isMobile = window.innerWidth <= MOBILE_BP;
+      if (isMobile) applyMobileLayout();
+      else applyDesktopLayout();
+      setTimeout(updateAll, 30);
+    }
+
+    window.addEventListener('resize', layoutFlow);
+
+    // Staggered entrance
+    mainNodes.forEach((node, i) => setTimeout(() => { if(node) node.classList.add('visible'); }, 200 + i * 150));
+    secA.forEach((node, i) => setTimeout(() => { if(node) node.classList.add('visible'); }, 500 + i * 100));
+    secB.forEach((node, i) => setTimeout(() => { if(node) node.classList.add('visible'); }, 700 + i * 100));
+    const hint = document.getElementById('n8n-hint');
+    setTimeout(() => { if(hint) hint.classList.add('visible'); }, 1400);
+
+    // Apply initial layout
+    setTimeout(layoutFlow, 10);
+
+    function getRect(el) {
+      const cr = canvas.getBoundingClientRect();
+      const er = el.getBoundingClientRect();
+      return {
+        cx: er.left - cr.left + er.width / 2,
+        cy: er.top - cr.top + er.height / 2,
+        left: er.left - cr.left,
+        right: er.left - cr.left + er.width,
+        top: er.top - cr.top,
+        bottom: er.top - cr.top + er.height,
+      };
+    }
+
+    function makePath(cls) {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('class', cls);
+      svgEl.appendChild(p);
+      return p;
+    }
+    function makeArrow() {
+      const a = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      a.setAttribute('class', 'n8n-arrowhead');
+      svgEl.appendChild(a);
+      return a;
+    }
+
+    // Horizontal wires (main node to next main node)
+    const horizWires = [];
+    for (let i = 0; i < 4; i++) {
+      const path = makePath('n8n-wire');
+      const arrow = makeArrow();
+      horizWires.push({ path, arrow, from: mainNodes[i], to: mainNodes[i+1] });
+    }
+
+    // Vertical dashed wires (main → secA, secA → secB)
+    const vertA = mainNodes.map((n, i) => ({ path: makePath('n8n-wire-dash'), from: n, to: secA[i] }));
+    const vertB = secA.map((n, i) => ({ path: makePath('n8n-wire-dash'), from: n, to: secB[i] }));
+
+    function updateHorizWire(w) {
+      if (!w.from || !w.to) return;
+      const f = getRect(w.from);
+      const t = getRect(w.to);
+      const sx = f.right, sy = f.cy, ex = t.left, ey = t.cy;
+      const cp = (sx + ex) / 2;
+      w.path.setAttribute('d', `M${sx},${sy} C${cp},${sy} ${cp},${ey} ${ex},${ey}`);
+      w.arrow.setAttribute('points', `${ex},${ey} ${ex-9},${ey-5} ${ex-9},${ey+5}`);
+      const len = w.path.getTotalLength();
+      w.path.style.strokeDasharray = len;
+      if (!w.path.classList.contains('active')) w.path.style.strokeDashoffset = len;
+    }
+
+    function updateVertWire(w) {
+      if (!w.from || !w.to) return;
+      const f = getRect(w.from);
+      const t = getRect(w.to);
+      const sx = f.cx, sy = f.bottom, ex = t.cx, ey = t.top;
+      w.path.setAttribute('d', `M${sx},${sy} C${sx},${(sy+ey)/2} ${ex},${(sy+ey)/2} ${ex},${ey}`);
+    }
+
+    function updateAll() {
+      horizWires.forEach(updateHorizWire);
+      vertA.forEach(updateVertWire);
+      vertB.forEach(updateVertWire);
+    }
+
+    // Wait a tick for layout then calculate - layout is handled by layoutFlow()
+    window.addEventListener('resize', updateAll);
+
+    function drawHorizWire(w) {
+      updateHorizWire(w);
+      const len = w.path.getTotalLength();
+      w.path.style.transition = 'none';
+      w.path.style.strokeDashoffset = len;
+      w.path.classList.add('active');
+      w.arrow.classList.add('active');
+      requestAnimationFrame(() => {
+        w.path.style.transition = 'stroke-dashoffset 0.55s cubic-bezier(0.4,0,0.2,1)';
+        w.path.style.strokeDashoffset = 0;
+      });
+    }
+
+    function eraseHorizWire(w) {
+      const len = w.path.getTotalLength();
+      w.path.style.transition = 'stroke-dashoffset 0.3s ease';
+      w.path.style.strokeDashoffset = len;
+      setTimeout(() => {
+        w.path.classList.remove('active');
+        w.arrow.classList.remove('active');
+      }, 300);
+    }
+
+    function activateNode(idx) {
+      if (idx < 4) {
+        drawHorizWire(horizWires[idx]);
+        // Pulse target
+        setTimeout(() => {
+          if (mainNodes[idx+1]) {
+            mainNodes[idx+1].classList.add('target-lit');
+            setTimeout(() => mainNodes[idx+1].classList.remove('target-lit'), 700);
+          }
+        }, 420);
+      }
+      // Show vertical wires and light secondaries
+      [vertA[idx], vertB[idx]].forEach(w => { if(w) w.path.classList.add('active'); });
+      [secA[idx], secB[idx]].forEach(s => {
+        if (!s) return;
+        s.classList.add('lit');
+        setTimeout(() => s.classList.remove('lit'), 1100);
+      });
+      mainNodes[idx].classList.add('fired');
+    }
+
+    function deactivateNode(idx) {
+      if (idx < 4) eraseHorizWire(horizWires[idx]);
+      [vertA[idx], vertB[idx]].forEach(w => { if(w) w.path.classList.remove('active'); });
+      mainNodes[idx].classList.remove('fired', 'hovered');
+    }
+
+    mainNodes.forEach((node, idx) => {
+      if (!node) return;
+      node.addEventListener('mouseenter', () => {
+        node.classList.add('hovered');
+        if (!node.dataset.locked) activateNode(idx);
+      });
+      node.addEventListener('mouseleave', () => {
+        node.classList.remove('hovered');
+        if (!node.dataset.locked) deactivateNode(idx);
+      });
+      node.addEventListener('click', () => {
+        if (node.dataset.locked) {
+          delete node.dataset.locked;
+          deactivateNode(idx);
+        } else {
+          node.dataset.locked = '1';
+          activateNode(idx);
+        }
+      });
+    });
+  }
+
+  const archObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { initN8nFlow(); archObs.disconnect(); }
+  }, { threshold: 0.1 });
+  const archEl = document.getElementById('arch-diagram');
+  if (archEl) archObs.observe(archEl);
+
+  // ── TYPING ANIMATION ────────────────────────────────────
+  (function() {
+    const steps = Array.from(document.querySelectorAll('#logic-steps .logic-step'));
+    if (!steps.length) return;
+    const SPEED = 11;
+
+    function typeStep(idx) {
+      if (idx >= steps.length) return;
+      const step = steps[idx];
+      const bodyEl = step.querySelector('.logic-body');
+      if (!bodyEl) { typeStep(idx + 1); return; }
+      const text = bodyEl.dataset.text || '';
+      if (!text) { step.classList.add('done'); typeStep(idx + 1); return; }
+
+      step.classList.add('typing');
+      bodyEl.textContent = '';
+
+      const cur = document.createElement('span');
+      cur.className = 'logic-cursor';
+      bodyEl.appendChild(cur);
+
+      let i = 0;
+      function tick() {
+        if (i < text.length) {
+          bodyEl.insertBefore(document.createTextNode(text[i]), cur);
+          i++;
+          setTimeout(tick, SPEED);
+        } else {
+          cur.remove();
+          step.classList.remove('typing');
+          step.classList.add('done');
+          setTimeout(() => typeStep(idx + 1), 160);
+        }
+      }
+      tick();
+    }
+
+    // Trigger when logic section scrolls into view
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) { obs.disconnect(); typeStep(0); }
+    }, { threshold: 0.2 });
+    const logicEl = document.getElementById('logic-steps');
+    if (logicEl) obs.observe(logicEl);
+  })();
+
+</script>
+</body>
+</html>
