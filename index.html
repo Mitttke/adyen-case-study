@@ -297,17 +297,21 @@
     #arch-diagram {
       width: 100%;
       overflow-x: auto;
+      overflow-y: visible;
       padding-bottom: 20px;
       user-select: none;
+    }
+    .arch-diagram-wrap {
+      overflow: visible;
     }
     .n8n-canvas {
       position: relative;
       min-width: 1100px;
-      height: 440px;
+      height: 500px;
     }
     .n8n-canvas.mobile-layout {
       min-width: unset;
-      height: 820px;
+      height: 980px;
     }
     .n8n-svg {
       position: absolute;
@@ -358,6 +362,7 @@
       text-align: center;
       cursor: pointer;
       opacity: 0;
+      overflow: visible;
       transform: translateY(16px);
       transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.25s, box-shadow 0.25s, background 0.25s;
     }
@@ -398,30 +403,6 @@
     }
     .n8n-secondary.visible { opacity: 1; transform: translateY(0); }
     .n8n-secondary.lit { border-color: var(--border2); color: var(--white); }
-    .n8n-tooltip {
-      position: absolute;
-      bottom: calc(100% + 12px);
-      left: 50%;
-      transform: translateX(-50%) translateY(4px);
-      background: var(--black);
-      border: 1px solid var(--green);
-      padding: 10px 14px;
-      font-size: 11px;
-      color: var(--gray);
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      z-index: 20;
-      line-height: 1.6;
-      text-align: left;
-      max-width: 220px;
-      white-space: normal;
-    }
-    .n8n-node:hover .n8n-tooltip, .n8n-node.hovered .n8n-tooltip {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
     .n8n-hint {
       font-size: 11px;
       color: var(--gray2);
@@ -795,6 +776,8 @@
       section { padding: 100px 24px 60px; }
       #arch-diagram { -webkit-overflow-scrolling: touch; }
       .n8n-hint { display: none; }
+      .n8n-phase-label { display: none; }
+      .n8n-canvas { padding-top: 0 !important; }
       nav { padding: 0 20px; }
       .nav-links { display: none; }
       .hero-stats { grid-template-columns: 1fr 1fr; }
@@ -871,14 +854,14 @@
   <div class="container hero-inner">
     <div class="hero-tag reveal">
       <span class="dot"></span>
-      Lead GTM Automation Engineer &nbsp;/&nbsp; Case Study
+      Senior Automation Engineer &nbsp;/&nbsp; Case Study
     </div>
     <h1 class="hero-title reveal reveal-delay-1">
       <span class="line1">Lead-to-Opportunity.</span>
       <span class="line2 glitch-wrap" data-text="Done right.">Done right.</span>
     </h1>
     <p class="hero-sub reveal reveal-delay-2">
-      The tools are there. The problem is how they talk to each other. This is my architecture for fixing the lead-to-opportunity motion — how I would build it, in what order, and why.
+      The tools are there. The problem is how they talk to each other. This is how I would fix the lead-to-opportunity motion, what to build, in what order, and why.
     </p>
     <div class="hero-stack reveal reveal-delay-3">
       <span class="stack-pill">Salesforce</span>
@@ -913,11 +896,11 @@
     <div class="section-label reveal">01 Technical Audit</div>
     <h2 class="reveal reveal-delay-1">Where the stack leaks.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      I audit before I build. Every time. You cannot fix what you have not mapped.
+      I audit before I build. Every time. You can not fix what you have not mapped.
     </p>
 
     <div class="context-box reveal reveal-delay-2">
-      <strong>How I audit:</strong> 90 days of routing data. Field-by-field mapping across all 7 tools. Talk to 5 SDRs and 3 AEs. Pull API logs and find where governor limits get hit. Then I start building.
+      <strong>How I audit:</strong> 90 days of routing data. Field-by-field mapping across all 7 tools. Talking to 5 SDRs and 3 AEs. Pulling API logs and finding where governor limits get hit. Then I start building.
     </div>
 
     <div class="audit-grid reveal reveal-delay-3">
@@ -925,30 +908,30 @@
         <div class="audit-header tag-risk">// risks</div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">01</span> Duplicate lead ingestion</div>
-          <div class="audit-item-body">ZoomInfo, Clay, and LinkedIn SN are all pushing leads into Salesforce with no shared dedup logic. Reps get assigned the same contact from three sources. They stop trusting assignments. Once that trust is gone, the whole pipeline stops working.</div>
+          <div class="audit-item-body">ZoomInfo, Clay, and LinkedIn SN all push leads into Salesforce with no shared dedup logic. Reps get assigned the same contact three times from three sources. Once they stop trusting assignments, the whole pipeline breaks down.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">02</span> Enrichment field conflicts</div>
-          <div class="audit-item-body">No waterfall defined. ZoomInfo and Clay both write to the same fields. Last sync wins. ZoomInfo says company size is 500, Clay says 50. LeanData routes on company size. Wrong territory every time. This is not a data problem — it is an architecture problem.</div>
+          <div class="audit-item-body">No waterfall defined. ZoomInfo and Clay both write to the same fields and last sync wins. ZoomInfo says company size is 500, Clay says 50. LeanData routes on company size. Wrong territory every time. This is not a data problem, it is an architecture problem.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">03</span> LeanData catch-all queue</div>
-          <div class="audit-item-body">Leads that do not match routing rules fall into a generic queue with no SLA and no owner. Nobody monitors it. High-intent leads go cold in there and nobody notices until a rep asks about a dead deal weeks later.</div>
+          <div class="audit-item-body">Leads that do not match routing rules fall into a generic queue with no SLA and no owner. Nobody monitors it. High-intent leads go cold in there and nobody notices until a rep is asking about a dead deal weeks later.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">04</span> API rate limit exposure</div>
-          <div class="audit-item-body">Enrichment calls on inbound spikes hit Salesforce governor limits and fail silently. No alert, no retry, no log. Leads just do not get enriched. Nobody finds out until a rep asks why a field is empty three days later.</div>
+          <div class="audit-item-body">Enrichment calls on inbound spikes hit Salesforce governor limits and fail silently. No alert, no retry, no log. Leads do not get enriched and nobody finds out until a rep is asking why a field is empty three days later.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">05</span> Gong data stays in Gong</div>
-          <div class="audit-item-body">Pricing questions, competitor mentions, buying signals — Gong captures all of it. None of it feeds back into routing or scoring. Reps update CRM manually after every call while that intelligence just sits there unused.</div>
+          <div class="audit-item-body">Pricing questions, competitor mentions, buying signals — Gong captures all of it. None of it feeds back into routing or scoring. Reps are updating CRM manually after every call while that intelligence sits there unused.</div>
         </div>
       </div>
       <div class="audit-col">
         <div class="audit-header tag-opp">// opportunities</div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">01</span> Unified enrichment waterfall</div>
-          <div class="audit-item-body">Define field ownership once. Clay runs first on lead create. ZoomInfo verifies and fills gaps 24 hours later. Each field gets a confidence score. Routing only fires on high-confidence data. This one change alone kills most of the routing errors.</div>
+          <div class="audit-item-body">I would define field ownership once. Clay runs first, ZoomInfo verifies and fills gaps 24 hours later. Each field gets a confidence score. Routing only fires on high-confidence data. This one change alone kills most of the routing errors.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">02</span> Gong signals into routing</div>
@@ -956,15 +939,15 @@
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">03</span> Sub-90 second assignment via Slack</div>
-          <div class="audit-item-body">LeanData assigns a lead. Slack DM fires to the rep instantly. Name, company, source, enriched data, direct Salesforce link. Rep knows before they finish reading the previous email. No queue-checking, no dashboard refreshing.</div>
+          <div class="audit-item-body">The moment LeanData assigns a lead, a Slack DM fires to the rep. Name, company, source, enriched data, direct Salesforce link. Rep knows before they finish reading the previous email. No queue-checking, no dashboard refreshing.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">04</span> Calendly to sequence automation</div>
-          <div class="audit-item-body">Meeting booked on Calendly: SF sequence pauses automatically. Meeting cancelled: sequence resumes with a follow-up step. Right now this is manual and happens maybe half the time. Automate it and it happens every time.</div>
+          <div class="audit-item-body">Calendly wired into SF Sales Engagement. Booked meeting pauses the sequence. Cancellation resumes it with a follow-up step. Right now this is manual and happens maybe half the time. Automate it and it happens every time.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">05</span> Catch-all queue with an actual SLA</div>
-          <div class="audit-item-body">Every unmatched lead lands in an ops queue with a 2-hour SLA and a Slack alert. Someone owns it. Someone reviews it. Nothing sits invisible. Every lead gets a decision.</div>
+          <div class="audit-item-body">Every unmatched lead lands in an ops queue with a 2-hour SLA and a Slack alert to the team. Someone owns it, someone reviews it. Nothing sits invisible.</div>
         </div>
       </div>
     </div>
@@ -996,55 +979,48 @@
         <div class="n8n-node" id="node-0" data-index="0" data-desktop-top="134" data-desktop-left="11" style="width:155px;top:134px;left:calc(11% - 78px)">
           <div class="n8n-node-name">ZoomInfo</div>
           <div class="n8n-node-sub">Intent signals</div>
-          <div class="n8n-tooltip">Identifies high-intent accounts and pushes them into the pipeline. First touch before any enrichment.</div>
         </div>
         <div class="n8n-node" id="node-1" data-index="1" data-desktop-top="134" data-desktop-left="29" style="width:155px;top:134px;left:calc(29% - 78px)">
           <div class="n8n-node-name">Clay</div>
           <div class="n8n-node-sub">Primary enrichment</div>
-          <div class="n8n-tooltip">Runs first. Firmographic, technographic, headcount, funding. Owns the field. ZoomInfo only fills gaps.</div>
         </div>
         <div class="n8n-node" id="node-2" data-index="2" data-desktop-top="134" data-desktop-left="50" style="width:155px;top:134px;left:calc(50% - 78px)">
           <div class="n8n-node-name">LeanData</div>
           <div class="n8n-node-sub">Rules engine</div>
-          <div class="n8n-tooltip">Territory, ownership, capacity, round-robin. Match in under 60s. No match: ops queue with a 2hr SLA.</div>
         </div>
         <div class="n8n-node" id="node-3" data-index="3" data-desktop-top="134" data-desktop-left="71" style="width:155px;top:134px;left:calc(71% - 78px)">
           <div class="n8n-node-name">SF Sales Eng.</div>
           <div class="n8n-node-sub">Auto sequences</div>
-          <div class="n8n-tooltip">Right sequence, right persona. Calendly booked: pauses. Cancelled: resumes. No manual step.</div>
         </div>
         <div class="n8n-node" id="node-4" data-index="4" data-desktop-top="134" data-desktop-left="89" style="width:155px;top:134px;left:calc(89% - 78px)">
           <div class="n8n-node-name">Salesforce</div>
           <div class="n8n-node-sub">Opportunity</div>
-          <div class="n8n-tooltip">Opportunity created with enrichment pre-filled. Rep opens a record with context already in it.</div>
         </div>
 
         <!-- Secondary nodes row 1 -->
-        <div class="n8n-secondary" id="sec-0a" style="width:140px;top:270px;left:calc(11% - 70px)">LinkedIn SN</div>
-        <div class="n8n-secondary" id="sec-1a" style="width:140px;top:270px;left:calc(29% - 70px)">ZoomInfo (verify)</div>
-        <div class="n8n-secondary" id="sec-2a" style="width:140px;top:270px;left:calc(50% - 70px)">Salesforce Lead</div>
-        <div class="n8n-secondary" id="sec-3a" style="width:140px;top:270px;left:calc(71% - 70px)">Calendly booking</div>
-        <div class="n8n-secondary" id="sec-4a" style="width:140px;top:270px;left:calc(89% - 70px)">Gong AI summary</div>
+        <div class="n8n-secondary" id="sec-0a" style="width:140px;top:310px;left:calc(11% - 70px)">LinkedIn SN</div>
+        <div class="n8n-secondary" id="sec-1a" style="width:140px;top:310px;left:calc(29% - 70px)">ZoomInfo (verify)</div>
+        <div class="n8n-secondary" id="sec-2a" style="width:140px;top:310px;left:calc(50% - 70px)">Salesforce Lead</div>
+        <div class="n8n-secondary" id="sec-3a" style="width:140px;top:310px;left:calc(71% - 70px)">Calendly booking</div>
+        <div class="n8n-secondary" id="sec-4a" style="width:140px;top:310px;left:calc(89% - 70px)">Gong AI summary</div>
 
         <!-- Secondary nodes row 2 -->
-        <div class="n8n-secondary" id="sec-0b" style="width:140px;top:342px;left:calc(11% - 70px)">Web forms</div>
-        <div class="n8n-secondary" id="sec-1b" style="width:140px;top:342px;left:calc(29% - 70px)">Dedup check</div>
-        <div class="n8n-secondary" id="sec-2b" style="width:140px;top:342px;left:calc(50% - 70px)">Slack alert</div>
-        <div class="n8n-secondary" id="sec-3b" style="width:140px;top:342px;left:calc(71% - 70px)">Gong call</div>
-        <div class="n8n-secondary" id="sec-4b" style="width:140px;top:342px;left:calc(89% - 70px)">Rep next steps</div>
+        <div class="n8n-secondary" id="sec-0b" style="width:140px;top:395px;left:calc(11% - 70px)">Web forms</div>
+        <div class="n8n-secondary" id="sec-1b" style="width:140px;top:395px;left:calc(29% - 70px)">Dedup check</div>
+        <div class="n8n-secondary" id="sec-2b" style="width:140px;top:395px;left:calc(50% - 70px)">Slack alert</div>
+        <div class="n8n-secondary" id="sec-3b" style="width:140px;top:395px;left:calc(71% - 70px)">Gong call</div>
+        <div class="n8n-secondary" id="sec-4b" style="width:140px;top:395px;left:calc(89% - 70px)">Rep next steps</div>
       </div>
 
       <div class="n8n-hint" id="n8n-hint">
-        <span>&#8594;</span> hover or click any node to trace the flow
+        hover or click any node to trace the flow
       </div>
 
       <div class="arch-bottom" style="background:var(--card);border-color:var(--border);margin-top:20px;">
-        <span class="icon">&#9889;</span>
-        <span><strong>Slack</strong> fires a DM to the assigned rep the moment routing happens. Full context included. No queue to check.</span>
+        <span><strong>Slack DM fires</strong> to the assigned rep the moment routing happens. Full context included. No queue to check.</span>
       </div>
       <div class="arch-compliance">
-        <span>&#128274;</span>
-        <span>GDPR + PCI-DSS compliance layer sits at every integration point. PII masking, consent tracking, EU data residency — enforced before any record moves between tools.</span>
+        <span>GDPR and PCI-DSS compliance layer at every integration point. PII masking, consent tracking, EU data residency — enforced before any record moves between tools.</span>
       </div>
     </div>
     <div class="scroll-hint reveal" style="display:none"></div>
@@ -1059,7 +1035,7 @@
         <div class="logic-num">01</div>
         <div class="logic-content">
           <div class="logic-title">Lead ingestion and dedup</div>
-          <div class="logic-body" data-text="Lead comes in from ZoomInfo, LinkedIn SN, or a web form. Clay runs a dedup check against existing Salesforce records before anything is created. Fuzzy match on email domain and company name. Match found: merge and update. No match: create. Duplicates stop here."></div>
+          <div class="logic-body" data-text="Before anything is created I run a dedup check through Clay against existing Salesforce records. Fuzzy match on email domain and company name. Match found: merge and update. No match: create the record. Duplicates stop here."></div>
           <div class="logic-tools">Clay + LinkedIn SN + ZoomInfo</div>
         </div>
       </div>
@@ -1067,7 +1043,7 @@
         <div class="logic-num">02</div>
         <div class="logic-content">
           <div class="logic-title">Enrichment waterfall</div>
-          <div class="logic-body" data-text="Clay enriches first. Firmographic, technographic, headcount, funding. ZoomInfo runs 24 hours later in verify-and-fill mode only. It cannot overwrite what Clay confirmed. Every field on the lead record gets a confidence score. Low confidence: flagged for rep review. High confidence: passes to routing."></div>
+          <div class="logic-body" data-text="Clay runs first. Firmographic, technographic, headcount, funding. ZoomInfo runs 24 hours later in verify-and-fill mode only — it can not overwrite what Clay already confirmed. Every field gets a confidence score. Low confidence: flagged for rep review. High confidence: passes to routing."></div>
           <div class="logic-tools">Clay then ZoomInfo then Salesforce field write</div>
         </div>
       </div>
@@ -1075,7 +1051,7 @@
         <div class="logic-num">03</div>
         <div class="logic-content">
           <div class="logic-title">Routing via LeanData</div>
-          <div class="logic-body" data-text="Enriched lead hits LeanData. Rules check territory, account ownership, capacity, round-robin. Match found: assigned within 60 seconds, Slack DM fires to the rep. No match: ops queue with a 2-hour SLA and a Slack alert. No lead disappears without a decision."></div>
+          <div class="logic-body" data-text="Enriched lead hits LeanData. Rules check territory, account ownership, capacity, round-robin. Match found: assigned within 60 seconds, Slack DM fires to the rep. No match: ops queue with a 2-hour SLA and a Slack alert to the team. No lead disappears without a decision."></div>
           <div class="logic-tools">LeanData then Salesforce assignment then Slack</div>
         </div>
       </div>
@@ -1083,7 +1059,7 @@
         <div class="logic-num">04</div>
         <div class="logic-content">
           <div class="logic-title">Engagement sequence</div>
-          <div class="logic-body" data-text="Assignment triggers automatic enrollment in the right SF Sales Engagement sequence based on persona and source. Calendly link in the first touch. Meeting booked: sequence pauses. Meeting cancelled: sequence resumes with a follow-up. Gong call done: AI summary syncs to Salesforce with next steps filled in. Rep does not open CRM after the call."></div>
+          <div class="logic-body" data-text="Automatic enrollment into the right SF Sales Engagement sequence based on persona and source. Calendly link goes in the first touch. Meeting booked: sequence pauses. Meeting cancelled: sequence resumes with a follow-up. Gong call done: AI summary syncs to Salesforce with next steps filled in. Rep does not open CRM after the call."></div>
           <div class="logic-tools">SF Sales Engagement + Calendly webhook + Gong API</div>
         </div>
       </div>
@@ -1091,7 +1067,7 @@
         <div class="logic-num">05</div>
         <div class="logic-content">
           <div class="logic-title">Lead to opportunity conversion</div>
-          <div class="logic-body" data-text="Conversion triggers when a meeting is held or lead score crosses the threshold. Opportunity is created automatically with enrichment data pre-filled: company, territory, deal size estimate, competitive context from Gong. Rep gets a record with context already in it. Not a blank form."></div>
+          <div class="logic-body" data-text="Conversion triggers when a meeting is held or the lead score crosses the threshold. Opportunity created automatically with enrichment data pre-filled: company, territory, deal size estimate, competitive context from Gong. Rep gets a record with context already in it. Not a blank form."></div>
           <div class="logic-tools">Salesforce workflow + Gong signal + lead score threshold</div>
         </div>
       </div>
@@ -1105,39 +1081,33 @@
     <div class="section-label reveal">03 Security &amp; Compliance</div>
     <h2 class="reveal reveal-delay-1">Adyen is a FinTech.<br>Compliance is not a feature.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      Every integration decision starts with GDPR and PCI-DSS. Not a checkbox at the end of the project.
+      Every integration decision I make starts with GDPR and PCI-DSS in mind. Not a checkbox at the end of the project.
     </p>
 
     <div class="sec-grid reveal reveal-delay-2">
       <div class="sec-card">
-        <div class="sec-icon">&#128274;</div>
         <div class="sec-title">GDPR at ingestion</div>
-        <div class="sec-body">Every lead record carries consent origin, timestamp, and lawful basis. Leads without verifiable consent get flagged before enrichment runs. Enforced in the Clay workflow — not left to reps to manage.</div>
+        <div class="sec-body">Every lead record carries consent origin, timestamp, and lawful basis. Leads without verifiable consent get flagged before enrichment runs. Enforced in the Clay workflow, not left to reps to manage.</div>
       </div>
       <div class="sec-card">
-        <div class="sec-icon">&#128179;</div>
         <div class="sec-title">PCI-DSS pathway isolation</div>
-        <div class="sec-body">GTM tools never store or transit payment data. Every API connection is scoped and audited before going live. Full access trail across ZoomInfo, Clay, and Salesforce.</div>
+        <div class="sec-body">GTM tools never store or transit payment data. Every API connection gets scoped and audited before going live. Full access trail across ZoomInfo, Clay, and Salesforce.</div>
       </div>
       <div class="sec-card">
-        <div class="sec-icon">&#127760;</div>
         <div class="sec-title">EU data residency</div>
         <div class="sec-body">ZoomInfo, Clay, and Salesforce instances verified for EU residency in the audit phase. Not assumed. If an instance is not compliant, the integration does not go live.</div>
       </div>
       <div class="sec-card">
-        <div class="sec-icon">&#128272;</div>
         <div class="sec-title">API key governance</div>
-        <div class="sec-body">All credentials in a secrets manager. Never hardcoded. Quarterly rotation enforced. Least-privilege scopes only — if a tool needs read access, it does not get write access.</div>
+        <div class="sec-body">All credentials in a secrets manager, never hardcoded. Quarterly rotation enforced. Least-privilege scopes only — if a tool needs read access, it does not get write access.</div>
       </div>
       <div class="sec-card">
-        <div class="sec-icon">&#128203;</div>
         <div class="sec-title">Data minimization</div>
         <div class="sec-body">Only enrich fields with a documented business purpose. Not everything available just because it is there. Less data stored means less exposure.</div>
       </div>
       <div class="sec-card">
-        <div class="sec-icon">&#128680;</div>
         <div class="sec-title">Audit logs and alerts</div>
-        <div class="sec-body">Every automated action is logged with timestamp, trigger, and actor. Slack alert fires immediately if enrichment tries to run on an opted-out lead or a routing action bypasses normal rules.</div>
+        <div class="sec-body">Every automated action logged with timestamp, trigger, and actor. Slack alert fires immediately if enrichment tries to run on an opted-out lead or a routing action bypasses normal rules.</div>
       </div>
     </div>
   </div>
@@ -1149,7 +1119,7 @@
     <div class="section-label reveal">04 Execution</div>
     <h2 class="reveal reveal-delay-1">16 weeks. Three phases.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      Quick wins first. Core architecture second. Intelligence layer third. Skip the audit and the whole thing breaks.
+      I start with quick wins to build rep trust. Core architecture second. Intelligence layer third. Skip the audit and the whole thing breaks.
     </p>
 
     <div class="roadmap-phases reveal reveal-delay-3">
@@ -1159,7 +1129,7 @@
           <div class="roadmap-phase-title" style="color:var(--green);">Audit + Quick Wins</div>
         </div>
         <div class="roadmap-phase-items">
-          <div class="roadmap-item">Full data flow audit. Every field, every sync direction, every trigger condition across all 7 tools.</div>
+          <div class="roadmap-item">Full data flow mapped. Every field, every sync direction, every trigger condition across all 7 tools.</div>
           <div class="roadmap-item">Dedup rules in Clay before any lead hits Salesforce.</div>
           <div class="roadmap-item">LeanData catch-all queue fixed. Every unmatched lead gets an SLA and an owner.</div>
           <div class="roadmap-item">Slack notifications live for every assignment. Rep knows in under 60 seconds.</div>
@@ -1172,11 +1142,11 @@
           <div class="roadmap-phase-title" style="color:var(--green);">Core Architecture</div>
         </div>
         <div class="roadmap-phase-items">
-          <div class="roadmap-item">Enrichment waterfall live. Clay first, ZoomInfo verifies. Field ownership matrix enforced.</div>
-          <div class="roadmap-item">LeanData routing rules rebuilt from scratch. Tested against 30 days of historical data in sandbox.</div>
-          <div class="roadmap-item">SF Sales Engagement auto-enroll. Right sequence, right persona, every time.</div>
-          <div class="roadmap-item">Calendly webhook connected. Meeting booked pauses sequence. Cancelled resumes it.</div>
-          <div class="roadmap-item">Compliance layer active. Consent flags, data residency verified, PII masking on.</div>
+          <div class="roadmap-item">Enrichment waterfall live. Clay first, ZoomInfo verifies. Field ownership matrix defined and enforced.</div>
+          <div class="roadmap-item">LeanData routing rules rebuilt from scratch. Tested against 30 days of historical data in sandbox before going anywhere near production.</div>
+          <div class="roadmap-item">SF Sales Engagement auto-enroll built. Right sequence, right persona, every time.</div>
+          <div class="roadmap-item">Calendly webhook connected. Meeting booked pauses the sequence. Cancelled resumes it.</div>
+          <div class="roadmap-item">Compliance layer active. Consent flags enforced, data residency verified, PII masking on.</div>
         </div>
       </div>
       <div class="roadmap-phase">
@@ -1186,10 +1156,10 @@
         </div>
         <div class="roadmap-phase-items">
           <div class="roadmap-item">Gong signals wired into LeanData routing priority.</div>
-          <div class="roadmap-item">Lead scoring v1. Intent plus engagement plus firmographic fit.</div>
-          <div class="roadmap-item">AI routing recommendations for edge cases LeanData rules cannot handle.</div>
+          <div class="roadmap-item">Lead scoring v1 built. Intent plus engagement plus firmographic fit.</div>
+          <div class="roadmap-item">AI routing recommendations for the edge cases LeanData rules can not handle cleanly.</div>
           <div class="roadmap-item">Full ops dashboard. Routing accuracy, assignment time, sequence conversion by persona.</div>
-          <div class="roadmap-item">Documentation done. Team trained. System runs without me watching it.</div>
+          <div class="roadmap-item">Documentation done. Team trained. The system runs without me watching it.</div>
         </div>
       </div>
     </div>
@@ -1199,7 +1169,7 @@
     <div class="section-label reveal">04b Rollout plan</div>
     <h3 style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-bottom:12px;" class="reveal reveal-delay-1">LeanData routing rebuild, week by week.</h3>
     <p style="color:var(--gray);font-size:13px;margin-bottom:32px;" class="reveal reveal-delay-2">
-      Routing errors kill rep trust faster than anything else. I fix this first so everything built after it lands on solid ground.
+      Routing errors kill rep trust faster than anything else. I would fix this first so everything built after it lands on solid ground.
     </p>
 
     <div class="rollout-steps reveal reveal-delay-2">
@@ -1208,28 +1178,28 @@
           <div class="rollout-week">Week 1</div>
           <div class="rollout-title">Baseline</div>
         </div>
-        <div class="rollout-body">Pull 90 days of routing data. Current match rate, assignment time, catch-all volume, rep-reported errors. Set the targets: 95% match rate, sub-90s assignment, zero unaddressed catch-all leads.</div>
+        <div class="rollout-body">Pull 90 days of routing data. Current match rate, assignment time, catch-all volume, rep-reported errors. Targets: 95% match rate, sub-90s assignment, zero unaddressed catch-all leads.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green);">
           <div class="rollout-week">Week 2</div>
           <div class="rollout-title">Rules audit</div>
         </div>
-        <div class="rollout-body">Map every LeanData rule. Find conflicts, stale conditions, and gaps. Talk to the top 3 territory ops reps. What do they manually fix every week? That is exactly where the rules are broken.</div>
+        <div class="rollout-body">Map every LeanData rule. Find conflicts, stale conditions, and gaps. Talk to the top 3 territory ops reps and ask what they manually fix every week. That is exactly where the rules are broken.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green2);">
           <div class="rollout-week">Week 3</div>
           <div class="rollout-title">Sandbox build</div>
         </div>
-        <div class="rollout-body">New rules built in sandbox. Run against 30 days of historical leads. Zero catch-all escapes in simulation. Every unmatched case gets either a rule or a manual ops step.</div>
+        <div class="rollout-body">New rules built in sandbox and run against 30 days of historical leads. Zero catch-all escapes in simulation. Every unmatched case gets a rule or a manual ops step — nothing disappears.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green);">
           <div class="rollout-week">Week 4</div>
           <div class="rollout-title">Parallel run</div>
         </div>
-        <div class="rollout-body">New rules run in shadow mode alongside old rules. Outputs compared daily. Every divergence reviewed. Nothing goes live until 5 clean days in a row. Rollback plan documented and tested.</div>
+        <div class="rollout-body">New rules run in shadow mode alongside old ones. Outputs compared daily. Every divergence reviewed. Nothing goes live until 5 clean days in a row. Rollback plan documented and tested before cutover.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green);">
@@ -1241,7 +1211,7 @@
     </div>
 
     <div class="rollout-outcome reveal reveal-delay-3">
-      <strong>Target outcome:</strong> routing accuracy from 61% to 94%. Lead-to-first-touch from 4+ hours to under 40 minutes. Manual corrections down 87%. Reps trust the system again.
+      <strong>What I am targeting:</strong> routing accuracy from 61% to 94%. Lead-to-first-touch from 4+ hours to under 40 minutes. Manual corrections down 87%. Reps trust the system again.
     </div>
   </div>
 </section>
@@ -1252,33 +1222,29 @@
     <div class="section-label reveal">05 AI Vision</div>
     <h2 class="reveal reveal-delay-1">Beyond standard automation.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      AI in GTM is not about replacing reps. It is about giving them better information, faster. Here is how I would actually use it — not as a demo, in production.
+      AI in GTM is not about replacing reps. It is about giving them better information, faster. Here is how I would actually use it — not as a demo, but in production.
     </p>
 
     <div class="ai-grid reveal reveal-delay-3">
       <div class="ai-card">
         <div class="ai-card-num">01</div>
-        <div class="ai-icon">&#129504;</div>
         <div class="ai-title">LLM lead scoring with context</div>
-        <div class="ai-body">Standard scoring gives a number. An LLM gives a reason. Feed Gong transcripts, email engagement, and ZoomInfo data into a model via API. Output goes into Salesforce as plain text: "This lead mentioned a competitor three times and asked about pricing. Meeting was scheduled twice and cancelled once. High priority." A score of 87 tells a rep nothing. That sentence tells them everything.</div>
+        <div class="ai-body">Standard scoring gives a number. I feed Gong transcripts, email engagement, and ZoomInfo data into a model via API. It produces a plain-text summary in Salesforce: "This lead mentioned a competitor three times and asked about pricing. Meeting was scheduled twice and cancelled once. High priority." A score of 87 tells a rep nothing. That sentence tells them everything.</div>
       </div>
       <div class="ai-card">
         <div class="ai-card-num">02</div>
-        <div class="ai-icon">&#127919;</div>
         <div class="ai-title">AI routing for the hard cases</div>
-        <div class="ai-body">LeanData handles the 90% with clear rules. The other 10% — shared account ownership, new territories, acquired companies — is where routing breaks. For those edge cases, an LLM looks at account history, similar won deals, and rep capacity to suggest the best assignment with a reason. Human still decides. But they decide with better information.</div>
+        <div class="ai-body">LeanData handles the 90% with clear rules. The other 10% — shared account ownership, new territories, acquired companies — is where routing breaks. For those edge cases, For those edge cases I use an LLM to look at account history, similar won deals, and rep capacity and suggest the best assignment with a reason. Human still decides, but with better information.</div>
       </div>
       <div class="ai-card">
         <div class="ai-card-num">03</div>
-        <div class="ai-icon">&#128222;</div>
         <div class="ai-title">Gong to automatic CRM updates</div>
-        <div class="ai-body">After every Gong call, the AI summary triggers a Salesforce update via API. Next steps populated. Stage updated. Follow-up task created. Pain points logged in the opportunity record. Reps spend 20 to 30 minutes on CRM updates after every call right now. Automate it and it happens in seconds. Every time. No exceptions.</div>
+        <div class="ai-body">After every Gong call, the AI summary triggers a Salesforce update via the Gong API. Next steps populated, stage updated, follow-up task created, pain points logged. Reps spend 20 to 30 minutes on CRM after every call right now. Automate that and it happens in seconds, every time.</div>
       </div>
       <div class="ai-card">
         <div class="ai-card-num">04</div>
-        <div class="ai-icon">&#9881;</div>
         <div class="ai-title">Clay AI columns for personalization</div>
-        <div class="ai-body">Clay supports AI columns natively. Run each lead through a research agent that pulls recent account news, identifies the buyer context, and generates a personalization hook for the first email. Not a merged template field. An actual relevant angle based on what is happening at that company right now. Scales personalization without scaling headcount.</div>
+        <div class="ai-body">Clay supports AI columns natively. Run each lead through a research agent that pulls recent account news, identifies the buyer context, and generates a personalization hook for the first email. Not a merged template field — an actual relevant angle based on what is happening at that company right now. Personalization at scale without adding headcount.</div>
       </div>
     </div>
   </div>
@@ -1294,38 +1260,38 @@
     </p>
 
     <div class="context-box reveal reveal-delay-2">
-      <strong>Setup:</strong> ~800 leads per month. ZoomInfo and Clearbit feeding into Salesforce. 40% of routing failures traced to conflicting enrichment data. LeanData routing on company size — two sources disagreed on 42% of records.
+      <strong>Setup:</strong> ~800 leads per month. ZoomInfo and Clearbit both feeding into Salesforce. 40% of routing failures traced to conflicting enrichment data. LeanData routing on company size where the two sources disagreed on 42% of records.
     </div>
 
     <div class="example-cols reveal reveal-delay-3">
       <div class="example-col col-red">
         <div class="example-col-header">The problem</div>
         <div class="example-col-items">
-          <div class="example-item">ZoomInfo and Clearbit writing to the same fields. No priority logic.</div>
-          <div class="example-item">Last API sync wins. No way to know which source wrote the value.</div>
-          <div class="example-item">42% mismatch rate on company size. LeanData routing breaks on it.</div>
-          <div class="example-item">Reps routed to wrong territories daily. They start ignoring assignments.</div>
-          <div class="example-item">4 SDRs spending 30% of their week manually fixing routing errors.</div>
+          <div class="example-item">ZoomInfo and Clearbit were both writing to the same fields with no priority logic.</div>
+          <div class="example-item">Last API sync wins. No way to know which source wrote the current value.</div>
+          <div class="example-item">42% mismatch rate on company size, and LeanData routing was breaking on it every day.</div>
+          <div class="example-item">Reps were getting routed to the wrong territory daily and started ignoring assignments.</div>
+          <div class="example-item">4 SDRs were spending 30% of their week manually fixing routing errors.</div>
         </div>
       </div>
       <div class="example-col col-blue">
         <div class="example-col-header">What I built</div>
         <div class="example-col-items">
-          <div class="example-item">Field ownership matrix. One primary source per field. No exceptions.</div>
-          <div class="example-item">Clearbit enriches on lead create. ZoomInfo fills gaps 24 hours later.</div>
-          <div class="example-item">Confidence score on every lead. Routing rules only fire above the threshold.</div>
-          <div class="example-item">Catch-all queue rebuilt. 2-hour SLA. Slack alert to ops on every entry.</div>
-          <div class="example-item">2-week parallel run before cutover. Rollback plan ready the whole time.</div>
+          <div class="example-item">I built a field ownership matrix. One primary source per field, no exceptions.</div>
+          <div class="example-item">I had Clearbit enrich on lead create and ZoomInfo fill gaps 24 hours later.</div>
+          <div class="example-item">I added a confidence score to every lead record. Routing rules only fire above the threshold.</div>
+          <div class="example-item">I rebuilt the catch-all queue with a 2-hour SLA and Slack alerts to ops on every new entry.</div>
+          <div class="example-item">I ran the new rules in parallel for 2 weeks before cutover with a rollback plan ready the whole time.</div>
         </div>
       </div>
       <div class="example-col col-green">
         <div class="example-col-header">90 days later</div>
         <div class="example-col-items">
-          <div class="example-item">Routing accuracy: 61% to 94%.</div>
-          <div class="example-item">Manual corrections down 87%. SDRs stopped asking ops to fix assignments.</div>
-          <div class="example-item">Lead-to-first-touch: 4.2 hours to 38 minutes.</div>
-          <div class="example-item">SDR productivity up 23% on meetings booked per week.</div>
-          <div class="example-item">Ops team redeployed to higher value work within 60 days.</div>
+          <div class="example-item">Routing accuracy went from 61% to 94%.</div>
+          <div class="example-item">Manual corrections dropped 87%. SDRs stopped asking ops to fix their assignments.</div>
+          <div class="example-item">Lead-to-first-touch went from 4.2 hours to 38 minutes.</div>
+          <div class="example-item">SDR productivity went up 23% on meetings booked per week.</div>
+          <div class="example-item">Ops team was fully redeployed to higher value work within 60 days of launch.</div>
         </div>
       </div>
     </div>
@@ -1361,7 +1327,7 @@
         <span>reps forget it exists.</span>
       </h2>
       <p class="closing-sub reveal reveal-delay-2">
-        They open Salesforce and the lead is there. Context is there. Sequence is running. They did not set any of that up. They just sell. That is what good automation looks like.
+        They open Salesforce and the lead is there. Context is there. Sequence is already running. They did not set any of that up. They just sell. That is what I build.
       </p>
       <div class="closing-pills reveal reveal-delay-3">
         <span class="closing-pill">Audit first</span>
@@ -1369,7 +1335,7 @@
         <span class="closing-pill">Design for humans</span>
       </div>
       <div class="closing-meta reveal reveal-delay-4">
-        <strong>Vladan Mitic</strong> &nbsp;&nbsp;/&nbsp;&nbsp; Lead GTM Automation Engineer &nbsp;&nbsp;/&nbsp;&nbsp; 2026
+        <strong>Vladan Mitic</strong> &nbsp;&nbsp;/&nbsp;&nbsp; Senior Automation Engineer &nbsp;&nbsp;/&nbsp;&nbsp; 2026
       </div>
     </div>
   </div>
@@ -1462,12 +1428,12 @@
     // Desktop layout constants (% of canvas width)
     const desktopLeftPct = [11, 29, 50, 71, 89];
     const desktopTop = 134;
-    const secATop = 270;
-    const secBTop = 342;
+    const secATop = 310;
+    const secBTop = 395;
 
     // Mobile layout constants (vertical stack)
-    const mobileNodeTop  = [60, 200, 340, 480, 620];
-    const mobileSecATop  = [160, 300, 440, 580, 720];
+    const mobileNodeTop  = [60, 230, 400, 570, 740];
+    const mobileSecATop  = [170, 340, 510, 680, 850];
     const mobileSecBTop  = [200, 340, 480, 620, 760]; // Not shown on mobile, kept for wire calc
     const mobileNodeLeft = 50; // % from left, centered
     const mobileNodeW    = 160;
@@ -1490,7 +1456,7 @@
 
     function applyMobileLayout() {
       canvas.classList.add('mobile-layout');
-      canvas.style.height = '780px';
+      canvas.style.height = '980px';
       mainNodes.forEach((node, i) => {
         if (!node) return;
         node.style.width = mobileNodeW + 'px';
@@ -1678,7 +1644,7 @@
   (function() {
     const steps = Array.from(document.querySelectorAll('#logic-steps .logic-step'));
     if (!steps.length) return;
-    const SPEED = 11;
+    const SPEED = 4;
 
     function typeStep(idx) {
       if (idx >= steps.length) return;
