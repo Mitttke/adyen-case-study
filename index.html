@@ -808,6 +808,83 @@
     .scroll-hint::before { content: '←'; color: var(--green); animation: hscroll 1.5s ease infinite alternate; }
     .scroll-hint::after { content: '→'; color: var(--green); animation: hscroll 1.5s ease infinite alternate-reverse; }
     @keyframes hscroll { to { transform: translateX(5px); } }
+    /* Prep notes block */
+    .arch-prep {
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.3s;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .arch-prep.lit {
+      border-color: var(--green);
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .arch-prep-label {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .arch-prep-label::before {
+      content: '//';
+      color: var(--gray2);
+    }
+    .arch-prep-panels { position: relative; }
+    .arch-prep-panel {
+      display: none;
+    }
+    .arch-prep-panel.active {
+      display: block;
+      animation: panelFade 0.25s ease;
+    }
+    @keyframes panelFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .arch-prep-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: var(--border);
+    }
+    .arch-prep-item {
+      background: var(--card);
+      padding: 20px 24px;
+    }
+    .arch-prep-item:first-child {
+      border-right: 1px solid var(--border);
+    }
+    .arch-prep-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .arch-prep-text {
+      font-size: 12px;
+      color: var(--gray);
+      line-height: 1.8;
+    }
+    .arch-prep-text strong {
+      color: var(--green);
+      font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .arch-prep-body { grid-template-columns: 1fr; }
+      .arch-prep-item:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
   </style>
 </head>
 <body>
@@ -1022,6 +1099,77 @@
       </div>
       <div class="arch-compliance">
         <span>GDPR and PCI-DSS compliance layer at every integration point. PII masking, consent tracking, EU data residency. Enforced before any record moves between tools.</span>
+      </div>
+      <div class="arch-prep" id="arch-prep">
+        <div class="arch-prep-label" id="arch-prep-label">ingest</div>
+        <div class="arch-prep-panels">
+
+          <div class="arch-prep-panel" data-panel="0">
+            <div class="arch-prep-body">
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">Source overlap is the first problem</div>
+                <div class="arch-prep-text">ZoomInfo, LinkedIn SN, and web forms all push leads into Salesforce independently. Without a shared dedup check, the same contact lands in three queues. <strong>Clay handles dedup before any record is created</strong> — fuzzy match on email domain and company name.</div>
+              </div>
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">What to say if asked why Clay for dedup</div>
+                <div class="arch-prep-text">Clay sits at the top of the funnel and has native Salesforce lookup. It is cheaper to dedup here than to clean up downstream. Running it before record creation means no duplicate routing, no duplicate sequences, no rep confusion.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-prep-panel" data-panel="1">
+            <div class="arch-prep-body">
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">Why Clay first, ZoomInfo second</div>
+                <div class="arch-prep-text">Clay enriches on lead create. ZoomInfo runs 24 hours later in verify-and-fill mode only. <strong>Field ownership matrix defines which tool owns which field</strong> — no overwrites. Each field gets a confidence score. Routing only fires above the threshold.</div>
+              </div>
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">If they ask about data conflicts</div>
+                <div class="arch-prep-text">This was the root cause in the real-world example. 42% mismatch rate on company size because two sources wrote to the same field. The waterfall and ownership matrix eliminates that. One source per field, documented, enforced in Clay.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-prep-panel" data-panel="2">
+            <div class="arch-prep-body">
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">How I would measure routing accuracy</div>
+                <div class="arch-prep-text"><strong>LeanData match rate logs</strong> show the percentage of leads matched to a rule vs falling to catch-all. Salesforce reports on assignment timestamps give lead-to-first-touch time. Baseline first, then track weekly against targets: 95% match rate, sub-90s assignment.</div>
+              </div>
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">The catch-all is not a failure state</div>
+                <div class="arch-prep-text">Every routing system has edge cases. The catch-all queue with a 2-hour SLA and Slack alert means unmatched leads get a human decision fast. It is also the source of truth for finding gaps in routing rules — high catch-all volume tells you exactly what rules are missing.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-prep-panel" data-panel="3">
+            <div class="arch-prep-body">
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">Sequence logic and Calendly wiring</div>
+                <div class="arch-prep-text">Assignment triggers enrollment in the right SF Sales Engagement sequence based on persona and lead source. <strong>Calendly webhook pauses the sequence on booking, resumes on cancellation</strong>. No manual step. Works every time, not just when the rep remembers.</div>
+              </div>
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">The Gong feedback loop</div>
+                <div class="arch-prep-text">After every call, Gong AI summary syncs to Salesforce via API. Next steps populated, stage updated, follow-up task created. Rep does not touch CRM after the call. That is 20 to 30 minutes saved per rep per day, compounding across the team.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-prep-panel" data-panel="4">
+            <div class="arch-prep-body">
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">How do you know your numbers?</div>
+                <div class="arch-prep-text">The targets match the real-world example in this case study. If pushed on measurement: <strong>Salesforce reports on assignment timestamps</strong>, <strong>LeanData match rate logs</strong>, and <strong>manual correction ticket volume</strong> in Slack or Jira.</div>
+              </div>
+              <div class="arch-prep-item">
+                <div class="arch-prep-title">Narrating the full flow without the UI</div>
+                <div class="arch-prep-text">Ingest via ZoomInfo or LinkedIn SN, dedup check in Clay, enrichment waterfall (Clay first, ZoomInfo verifies), LeanData routing with Slack DM on assignment, Sales Engagement sequence auto-enroll, Calendly pause/resume, Gong AI summary syncs back to Salesforce.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
     <div class="scroll-hint reveal" style="display:none"></div>
@@ -1533,6 +1681,43 @@
     const vertA = mainNodes.map((n, i) => ({ path: makePath('n8n-wire-dash'), from: n, to: secA[i] }));
     const vertB = secA.map((n, i) => ({ path: makePath('n8n-wire-dash'), from: n, to: secB[i] }));
 
+    // Wire from node-4 down to the prep block
+    const prepWirePath = makePath('n8n-wire');
+    const prepWireArrow = makeArrow();
+
+    const phaseLabels = ['ingest', 'enrich', 'route', 'engage', 'convert'];
+
+    function updatePrepWire(nodeIdx) {
+      const prepEl = document.getElementById('arch-prep');
+      const ni = (nodeIdx !== undefined) ? nodeIdx : 4;
+      if (!mainNodes[ni] || !prepEl) return;
+      const f = getRect(mainNodes[ni]);
+      const canvasRect = canvas.getBoundingClientRect();
+      const prepRect = prepEl.getBoundingClientRect();
+      const sx = f.cx;
+      const sy = f.bottom;
+      const ex = f.cx;
+      const ey = prepRect.top - canvasRect.top;
+      const cy = (sy + ey) / 2;
+      prepWirePath.setAttribute('d', `M${sx},${sy} C${sx},${cy} ${ex},${cy} ${ex},${ey}`);
+      prepWireArrow.setAttribute('points', `${ex},${ey} ${ex-6},${ey-8} ${ex+6},${ey-8}`);
+      const len = prepWirePath.getTotalLength();
+      prepWirePath.style.strokeDasharray = len;
+      if (!prepWirePath.classList.contains('active')) prepWirePath.style.strokeDashoffset = len;
+    }
+
+    function showPrepPanel(idx) {
+      const prepEl = document.getElementById('arch-prep');
+      const label = document.getElementById('arch-prep-label');
+      if (!prepEl) return;
+      // Swap label
+      if (label) label.textContent = phaseLabels[idx];
+      // Swap panel
+      document.querySelectorAll('.arch-prep-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.querySelector('.arch-prep-panel[data-panel="' + idx + '"]');
+      if (panel) panel.classList.add('active');
+    }
+
     function updateHorizWire(w) {
       if (!w.from || !w.to) return;
       const f = getRect(w.from);
@@ -1558,6 +1743,7 @@
       horizWires.forEach(updateHorizWire);
       vertA.forEach(updateVertWire);
       vertB.forEach(updateVertWire);
+      // prepWire updated on node interaction only
     }
 
     // Wait a tick for layout then calculate - layout is handled by layoutFlow()
@@ -1605,12 +1791,38 @@
         setTimeout(() => s.classList.remove('lit'), 1100);
       });
       mainNodes[idx].classList.add('fired');
+      // Any node: draw wire down to prep block and show relevant panel
+      updatePrepWire(idx);
+      showPrepPanel(idx);
+      const prepLen = prepWirePath.getTotalLength();
+      prepWirePath.style.transition = 'none';
+      prepWirePath.style.strokeDashoffset = prepLen;
+      prepWirePath.classList.add('active');
+      prepWireArrow.classList.add('active');
+      requestAnimationFrame(() => {
+        prepWirePath.style.transition = 'stroke-dashoffset 0.55s cubic-bezier(0.4,0,0.2,1)';
+        prepWirePath.style.strokeDashoffset = 0;
+      });
+      setTimeout(() => {
+        const prepEl = document.getElementById('arch-prep');
+        if (prepEl) prepEl.classList.add('lit');
+      }, 300);
     }
 
     function deactivateNode(idx) {
       if (idx < 4) eraseHorizWire(horizWires[idx]);
       [vertA[idx], vertB[idx]].forEach(w => { if(w) w.path.classList.remove('active'); });
       mainNodes[idx].classList.remove('fired', 'hovered');
+      // Any node: hide prep block and reset wire
+      const prepEl = document.getElementById('arch-prep');
+      if (prepEl) prepEl.classList.remove('lit');
+      const prepLen2 = prepWirePath.getTotalLength();
+      prepWirePath.style.transition = 'stroke-dashoffset 0.3s ease';
+      prepWirePath.style.strokeDashoffset = prepLen2;
+      setTimeout(() => {
+        prepWirePath.classList.remove('active');
+        prepWireArrow.classList.remove('active');
+      }, 300);
     }
 
     mainNodes.forEach((node, idx) => {
