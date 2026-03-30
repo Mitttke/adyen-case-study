@@ -631,7 +631,7 @@
     }
     .example-col-items { padding: 18px 22px; }
     .example-item {
-      display: flex; gap: 12px;
+      display: block;
       padding: 9px 0;
       border-bottom: 1px solid var(--border);
       font-size: 12px;
@@ -639,13 +639,13 @@
       line-height: 1.6;
     }
     .example-item:last-child { border-bottom: none; }
-    .example-item::before { content: '>'; flex-shrink: 0; }
+    .example-item::before { content: ''; display: none; }
     .col-red .example-col-header { color: var(--gray); }
-    .col-red .example-item::before { color: var(--gray); }
+
     .col-blue .example-col-header { color: var(--green); }
-    .col-blue .example-item::before { color: var(--green); }
+
     .col-green .example-col-header { color: var(--green); }
-    .col-green .example-item::before { color: var(--green); }
+
 
     .example-metrics {
       display: grid;
@@ -901,7 +901,7 @@
     </p>
 
     <div class="context-box reveal reveal-delay-2">
-      <strong>How I audit:</strong> 60 days of routing data. Field-by-field mapping across all 7 tools. Talking to 5 SDRs and 3 AEs. Pulling API logs and finding where limits get hit. Then I start building.
+      <strong>How I audit:</strong> 60 days of routing data. Field-by-field mapping across all 7 tools. Talking to 5 SDRs and 3 AEs. Pulling API logs and finding where Salesforce rate limits are being hit. Then I start building.
     </div>
 
     <div class="audit-grid reveal reveal-delay-3">
@@ -921,7 +921,7 @@
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">04</span> API rate limit exposure</div>
-          <div class="audit-item-body">Enrichment calls on inbound spikes hit Salesforce governor limits and fail silently. No alert, no retry, no log. Leads do not get enriched and nobody finds out until a rep is asking why a field is empty three days later.</div>
+          <div class="audit-item-body">Enrichment calls on inbound spikes hit Salesforce API rate limits and fail silently. No alert, no retry, no log. Leads do not get enriched and nobody finds out until a rep is asking why a field is empty three days later.</div>
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">05</span> Gong data stays in Gong</div>
@@ -1080,9 +1080,9 @@
 <section id="security">
   <div class="container">
     <div class="section-label reveal">03 Security &amp; Compliance</div>
-    <h2 class="reveal reveal-delay-1">Adyen is a FinTech.<br>Compliance is not a feature.</h2>
+    <h2 class="reveal reveal-delay-1">Security and compliance.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      Every integration decision I make starts with GDPR and PCI-DSS in mind. Not a checkbox at the end of the project.
+      Every integration decision starts with GDPR and PCI-DSS.
     </p>
 
     <div class="sec-grid reveal reveal-delay-2">
@@ -1118,7 +1118,7 @@
 <section id="roadmap" style="background:var(--black2);">
   <div class="container">
     <div class="section-label reveal">04 Execution</div>
-    <h2 class="reveal reveal-delay-1">16 weeks. Three phases.</h2>
+    <h2 class="reveal reveal-delay-1">How I would roll this out in 3 phases.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
       Quick wins first, core architecture second, intelligence layer third. The audit is what makes all of it work.
     </p>
