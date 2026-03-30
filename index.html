@@ -1111,7 +1111,7 @@
                 <div class="arch-prep-text">ZoomInfo, LinkedIn SN, and web forms all push leads into Salesforce independently. Without a shared dedup check, the same contact lands in three queues. <strong>Clay handles dedup before any record is created.</strong> Fuzzy match on email domain and company name.</div>
               </div>
               <div class="arch-prep-item">
-                <div class="arch-prep-title">What to say if asked why Clay for dedup</div>
+                <div class="arch-prep-title">Why Clay for dedup</div>
                 <div class="arch-prep-text">Clay sits at the top of the funnel and has native Salesforce lookup. It is cheaper to dedup here than to clean up downstream. Running it before record creation means no duplicate routing, no duplicate sequences, no rep confusion.</div>
               </div>
             </div>
@@ -1124,7 +1124,7 @@
                 <div class="arch-prep-text">Clay enriches on lead create. ZoomInfo runs 24 hours later in verify-and-fill mode only. <strong>Field ownership matrix defines which tool owns which field.</strong> No overwrites. Each field gets a confidence score. Routing only fires above the threshold.</div>
               </div>
               <div class="arch-prep-item">
-                <div class="arch-prep-title">If they ask about data conflicts</div>
+                <div class="arch-prep-title">Data conflicts</div>
                 <div class="arch-prep-text">This was the root cause in the real-world example. 42% mismatch rate on company size because two sources wrote to the same field. The waterfall and ownership matrix eliminates that. One source per field, documented, enforced in Clay.</div>
               </div>
             </div>
@@ -1159,11 +1159,11 @@
           <div class="arch-prep-panel" data-panel="4">
             <div class="arch-prep-body">
               <div class="arch-prep-item">
-                <div class="arch-prep-title">How do you know your numbers?</div>
-                <div class="arch-prep-text">The targets match the real-world example in this case study. If pushed on measurement: <strong>Salesforce reports on assignment timestamps</strong>, <strong>LeanData match rate logs</strong>, and <strong>manual correction ticket volume</strong> in Slack or Jira.</div>
+                <div class="arch-prep-title">The numbers?</div>
+                <div class="arch-prep-text">The targets match the real-world example in this case study. <strong>Salesforce reports on assignment timestamps</strong>, <strong>LeanData match rate logs</strong>, and <strong>manual correction ticket volume</strong> in Slack or Jira.</div>
               </div>
               <div class="arch-prep-item">
-                <div class="arch-prep-title">Narrating the full flow without the UI</div>
+                <div class="arch-prep-title">The end of the flow</div>
                 <div class="arch-prep-text">Ingest via ZoomInfo or LinkedIn SN, dedup check in Clay, enrichment waterfall (Clay first, ZoomInfo verifies), LeanData routing with Slack DM on assignment, Sales Engagement sequence auto-enroll, Calendly pause/resume, Gong AI summary syncs back to Salesforce.</div>
               </div>
             </div>
