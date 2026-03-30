@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GTM Automation Architecture // Vladan Mitic</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0E13'/><rect x='4' y='8' width='14' height='16' fill='%23007A2E'/><rect x='20' y='20' width='8' height='4' fill='%23007A2E' opacity='0.5'/></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
@@ -125,8 +126,7 @@
 
     /* Sections */
     section {
-      min-height: 100vh;
-      padding: 120px 80px 80px;
+      padding: 80px 80px 72px;
       position: relative;
     }
     .container { max-width: 1100px; margin: 0 auto; }
@@ -166,9 +166,9 @@
 
     /* Hero */
     #hero {
-      min-height: 100vh;
-      display: flex; align-items: center;
-      padding-top: 80px;
+      display: flex; align-items: flex-start;
+      padding-top: 120px;
+      padding-bottom: 80px;
       overflow: hidden;
     }
     .hero-inner { position: relative; z-index: 2; }
@@ -670,8 +670,9 @@
 
     /* Closing */
     #closing {
-      min-height: 60vh;
       display: flex; align-items: center;
+      padding-top: 80px;
+      padding-bottom: 80px;
       border-top: 1px solid var(--border);
     }
     .closing-inner { max-width: 800px; }
@@ -773,7 +774,7 @@
 
     /* Mobile tweaks */
     @media (max-width: 768px) {
-      section { padding: 100px 24px 60px; }
+      section { padding: 72px 24px 56px; }
       #arch-diagram { -webkit-overflow-scrolling: touch; }
       .n8n-hint { display: none; }
       .n8n-phase-label { display: none; }
@@ -896,11 +897,11 @@
     <div class="section-label reveal">01 Technical Audit</div>
     <h2 class="reveal reveal-delay-1">Where the stack leaks.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      I audit before I build. Every time. You can not fix what you have not mapped.
+      I always audit before I build anything.
     </p>
 
     <div class="context-box reveal reveal-delay-2">
-      <strong>How I audit:</strong> 90 days of routing data. Field-by-field mapping across all 7 tools. Talking to 5 SDRs and 3 AEs. Pulling API logs and finding where governor limits get hit. Then I start building.
+      <strong>How I audit:</strong> 60 days of routing data. Field-by-field mapping across all 7 tools. Talking to 5 SDRs and 3 AEs. Pulling API logs and finding where governor limits get hit. Then I start building.
     </div>
 
     <div class="audit-grid reveal reveal-delay-3">
@@ -924,7 +925,7 @@
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-risk">05</span> Gong data stays in Gong</div>
-          <div class="audit-item-body">Pricing questions, competitor mentions, buying signals — Gong captures all of it. None of it feeds back into routing or scoring. Reps are updating CRM manually after every call while that intelligence sits there unused.</div>
+          <div class="audit-item-body">Pricing questions, competitor mentions, buying signals, Gong captures all of it. None of it feeds back into routing or scoring. Reps are updating CRM manually after every call while that intelligence sits there unused.</div>
         </div>
       </div>
       <div class="audit-col">
@@ -947,7 +948,7 @@
         </div>
         <div class="audit-item">
           <div class="audit-item-title"><span class="tag-opp">05</span> Catch-all queue with an actual SLA</div>
-          <div class="audit-item-body">Every unmatched lead lands in an ops queue with a 2-hour SLA and a Slack alert to the team. Someone owns it, someone reviews it. Nothing sits invisible.</div>
+          <div class="audit-item-body">Every unmatched lead lands in an ops queue with a 2-hour SLA and a Slack alert to the team. Someone owns it, someone reviews it. Nothing sits unreviewed.</div>
         </div>
       </div>
     </div>
@@ -1020,7 +1021,7 @@
         <span><strong>Slack DM fires</strong> to the assigned rep the moment routing happens. Full context included. No queue to check.</span>
       </div>
       <div class="arch-compliance">
-        <span>GDPR and PCI-DSS compliance layer at every integration point. PII masking, consent tracking, EU data residency — enforced before any record moves between tools.</span>
+        <span>GDPR and PCI-DSS compliance layer at every integration point. PII masking, consent tracking, EU data residency. Enforced before any record moves between tools.</span>
       </div>
     </div>
     <div class="scroll-hint reveal" style="display:none"></div>
@@ -1043,7 +1044,7 @@
         <div class="logic-num">02</div>
         <div class="logic-content">
           <div class="logic-title">Enrichment waterfall</div>
-          <div class="logic-body" data-text="Clay runs first. Firmographic, technographic, headcount, funding. ZoomInfo runs 24 hours later in verify-and-fill mode only — it can not overwrite what Clay already confirmed. Every field gets a confidence score. Low confidence: flagged for rep review. High confidence: passes to routing."></div>
+          <div class="logic-body" data-text="Clay runs first. Firmographic, technographic, headcount, funding. ZoomInfo runs 24 hours later in verify-and-fill mode only, it can not overwrite what Clay already confirmed. Every field gets a confidence score. Low confidence: flagged for rep review. High confidence: passes to routing."></div>
           <div class="logic-tools">Clay then ZoomInfo then Salesforce field write</div>
         </div>
       </div>
@@ -1099,7 +1100,7 @@
       </div>
       <div class="sec-card">
         <div class="sec-title">API key governance</div>
-        <div class="sec-body">All credentials in a secrets manager, never hardcoded. Quarterly rotation enforced. Least-privilege scopes only — if a tool needs read access, it does not get write access.</div>
+        <div class="sec-body">All credentials in a secrets manager, never hardcoded. Quarterly rotation enforced. Least-privilege scopes only. If a tool needs read access, it does not get write access.</div>
       </div>
       <div class="sec-card">
         <div class="sec-title">Data minimization</div>
@@ -1119,7 +1120,7 @@
     <div class="section-label reveal">04 Execution</div>
     <h2 class="reveal reveal-delay-1">16 weeks. Three phases.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      I start with quick wins to build rep trust. Core architecture second. Intelligence layer third. Skip the audit and the whole thing breaks.
+      Quick wins first, core architecture second, intelligence layer third. The audit is what makes all of it work.
     </p>
 
     <div class="roadmap-phases reveal reveal-delay-3">
@@ -1178,7 +1179,7 @@
           <div class="rollout-week">Week 1</div>
           <div class="rollout-title">Baseline</div>
         </div>
-        <div class="rollout-body">Pull 90 days of routing data. Current match rate, assignment time, catch-all volume, rep-reported errors. Targets: 95% match rate, sub-90s assignment, zero unaddressed catch-all leads.</div>
+        <div class="rollout-body">Pull 60 days of routing data. Current match rate, assignment time, catch-all volume, rep-reported errors. Targets: 95% match rate, sub-90s assignment, zero unaddressed catch-all leads.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green);">
@@ -1192,7 +1193,7 @@
           <div class="rollout-week">Week 3</div>
           <div class="rollout-title">Sandbox build</div>
         </div>
-        <div class="rollout-body">New rules built in sandbox and run against 30 days of historical leads. Zero catch-all escapes in simulation. Every unmatched case gets a rule or a manual ops step — nothing disappears.</div>
+        <div class="rollout-body">New rules built in sandbox and run against 30 days of historical leads. Zero catch-all escapes in simulation. Every unmatched case gets a rule or a manual ops step, nothing disappears.</div>
       </div>
       <div class="rollout-step">
         <div class="rollout-step-header" style="border-top:3px solid var(--green);">
@@ -1222,7 +1223,7 @@
     <div class="section-label reveal">05 AI Vision</div>
     <h2 class="reveal reveal-delay-1">Beyond standard automation.</h2>
     <p style="color:var(--gray);font-size:14px;margin:16px 0 40px;max-width:600px;" class="reveal reveal-delay-2">
-      AI in GTM is not about replacing reps. It is about giving them better information, faster. Here is how I would actually use it — not as a demo, but in production.
+      AI in GTM is not about replacing reps. It is about giving them better information, faster. Here is how I would actually use it, not as a demo, but in production.
     </p>
 
     <div class="ai-grid reveal reveal-delay-3">
@@ -1234,7 +1235,7 @@
       <div class="ai-card">
         <div class="ai-card-num">02</div>
         <div class="ai-title">AI routing for the hard cases</div>
-        <div class="ai-body">LeanData handles the 90% with clear rules. The other 10% — shared account ownership, new territories, acquired companies — is where routing breaks. For those edge cases, For those edge cases I use an LLM to look at account history, similar won deals, and rep capacity and suggest the best assignment with a reason. Human still decides, but with better information.</div>
+        <div class="ai-body">LeanData handles the 90% with clear rules. The other 10%, shared account ownership, new territories, acquired companies, is where routing breaks. For those edge cases, For those edge cases I use an LLM to look at account history, similar won deals, and rep capacity and suggest the best assignment with a reason. Human still decides, but with better information.</div>
       </div>
       <div class="ai-card">
         <div class="ai-card-num">03</div>
@@ -1244,7 +1245,7 @@
       <div class="ai-card">
         <div class="ai-card-num">04</div>
         <div class="ai-title">Clay AI columns for personalization</div>
-        <div class="ai-body">Clay supports AI columns natively. Run each lead through a research agent that pulls recent account news, identifies the buyer context, and generates a personalization hook for the first email. Not a merged template field — an actual relevant angle based on what is happening at that company right now. Personalization at scale without adding headcount.</div>
+        <div class="ai-body">Clay supports AI columns natively. Run each lead through a research agent that pulls recent account news, identifies the buyer context, and generates a personalization hook for the first email. Not a merged template field, an actual relevant angle based on what is happening at that company right now. Personalization at scale without adding headcount.</div>
       </div>
     </div>
   </div>
@@ -1285,7 +1286,7 @@
         </div>
       </div>
       <div class="example-col col-green">
-        <div class="example-col-header">90 days later</div>
+        <div class="example-col-header">60 days later</div>
         <div class="example-col-items">
           <div class="example-item">Routing accuracy went from 61% to 94%.</div>
           <div class="example-item">Manual corrections dropped 87%. SDRs stopped asking ops to fix their assignments.</div>
@@ -1324,10 +1325,10 @@
       <div class="section-label reveal">// the goal</div>
       <h2 class="closing-title reveal reveal-delay-1">
         When it works,<br>
-        <span>reps forget it exists.</span>
+        <span>the system runs itself.</span>
       </h2>
       <p class="closing-sub reveal reveal-delay-2">
-        They open Salesforce and the lead is there. Context is there. Sequence is already running. They did not set any of that up. They just sell. That is what I build.
+        Reps open Salesforce and everything is already there. Lead assigned, context filled in, sequence running. No manual steps, no hunting for information. That is the standard I build to.
       </p>
       <div class="closing-pills reveal reveal-delay-3">
         <span class="closing-pill">Audit first</span>
